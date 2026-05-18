@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Business Dashboard Pro + Cassa & Cloud Backup</title>
+    <title>Multi-Year Business Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #2563eb; --secondary: #94a3b8; --success: #059669; --danger: #ef4444; --bg: #f8fafc; }
@@ -12,12 +12,16 @@
         .grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 20px; }
         .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
+        .header-tools { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .select-anno { padding: 10px 20px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; border: 2px solid var(--primary); color: var(--primary); background: white; cursor: pointer; }
+
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; font-size: 0.75rem; color: #64748b; padding: 10px 5px; border-bottom: 1px solid #e2e8f0; }
         td { padding: 8px 5px; border-bottom: 1px solid #f1f5f9; }
         
         input, select { width: 85%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; }
         input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
+        input[disabled] { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
         
         .btn { color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; transition: background 0.2s; }
         .btn-save { background: var(--primary); margin-top: 15px; }
@@ -25,7 +29,6 @@
         .btn-add { background: var(--success); width: auto; padding: 8px 20px; }
         .btn-add:hover { background: #047857; }
         
-        /* Sezione Backup Estesa */
         .backup-title { font-size: 0.85rem; font-weight: bold; color: #64748b; margin-top: 15px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px;}
         .backup-zone { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
         .btn-backup { background: #475569; font-size: 0.8rem; padding: 10px; text-align: center; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; }
@@ -54,7 +57,15 @@
 <body>
 
 <div class="container">
-    <h2 style="text-align: center; margin-bottom: 30px;">Analisi Performance Mensile & Cassa</h2>
+    
+    <!-- BARRA DI CONTROLLO ANNO -->
+    <div class="header-tools">
+        <h2 style="margin: 0; font-size: 1.3rem;">Dashboard Fatturato</h2>
+        <div>
+            <label style="font-size: 0.85rem; font-weight: bold; color: #64748b; margin-right: 10px;">Anno di Lavoro:</label>
+            <select id="selettoreAnno" class="select-anno" onchange="cambiaAnno()"></select>
+        </div>
+    </div>
     
     <!-- REGISTRA VENDITA AL VOLO -->
     <div class="card">
@@ -81,17 +92,16 @@
                 <thead>
                     <tr>
                         <th>MESE</th>
-                        <th>2026 (€)</th>
-                        <th>2025 (€)</th>
+                        <th>ANNO SELEZ. (€)</th>
+                        <th>ANNO PREC. (€)</th>
                         <th style="text-align:right">VAR. %</th>
                     </tr>
                 </thead>
                 <tbody id="tabellaMesi"></tbody>
             </table>
-            <button class="btn btn-save" onclick="salvaTutto()">💾 SALVA TUTTO NEL BROWSER</button>
+            <button class="btn btn-save" onclick="salvaTutto()">💾 SALVA DATI ANNO IN CORSO</button>
             <div id="msg"></div>
 
-            <!-- OPZIONE 1: BACKUP TRAMITE FILE (PER GOOGLE DRIVE) -->
             <div class="backup-title">Metodo 1: Backup tramite file (.json)</div>
             <div class="backup-zone">
                 <button class="btn-backup" onclick="esportaBackup()">📥 Esporta File</button>
@@ -101,7 +111,6 @@
                 </label>
             </div>
 
-            <!-- OPZIONE 2: BACKUP RAPIDO COPIA/INCOLLA -->
             <div class="backup-title">Metodo 2: Sincronizzazione rapida Copia/Incolla</div>
             <div class="backup-zone">
                 <button class="btn-backup btn-text-backup" onclick="copiaTestoBackup()">📋 Copia Dati (Testo)</button>
@@ -132,26 +141,34 @@
             </div>
         </div>
     </div>
-    <button class="btn-reset" onclick="resetDati()">Azzera tutto per il nuovo anno</button>
+    <button class="btn-reset" onclick="resetDati()">Azzera database di questo browser</button>
 </div>
 
 <script>
     const mesiNomi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
     let chart;
+    
+    // Genera gli anni nel menu a tendina (dal 2025 al 2035)
+    const selettoreAnno = document.getElementById('selettoreAnno');
+    const annoAttualeReale = new Date().getFullYear();
+    for(let a = 2025; a <= 2035; a++) {
+        const opt = document.createElement('option');
+        opt.value = a; opt.innerText = a;
+        if(a === annoAttualeReale) opt.selected = true;
+        selettoreAnno.appendChild(opt);
+    }
 
     const tbody = document.getElementById('tabellaMesi');
     const selectMese = document.getElementById('meseSelezione');
     const meseCorrenteReale = new Date().getMonth();
 
+    // Inizializza i 12 mesi in tabella
     mesiNomi.forEach((mese, i) => {
         const row = document.createElement('tr');
-        const valC = localStorage.getItem('c_'+i) || '';
-        const valP = localStorage.getItem('p_'+i) || '';
-        
         row.innerHTML = `
             <td style="font-weight:bold; font-size:0.85rem">${mese}</td>
-            <td><input type="number" class="in-c" id="input-c-${i}" data-i="${i}" value="${valC}" oninput="aggiornaTutto()"></td>
-            <td><input type="number" class="in-p" id="input-p-${i}" data-i="${i}" value="${valP}" oninput="aggiornaTutto()"></td>
+            <td><input type="number" class="in-c" id="input-c-${i}" data-i="${i}" oninput="aggiornaTutto()"></td>
+            <td><input type="number" class="in-p" id="input-p-${i}" data-i="${i}" disabled></td>
             <td id="diff-${i}" style="text-align:right">-</td>
         `;
         tbody.appendChild(row);
@@ -161,6 +178,20 @@
         if(i === meseCorrenteReale) opt.selected = true;
         selectMese.appendChild(opt);
     });
+
+    // Cambia anno di lavoro e aggiorna i campi caricando dal localStorage
+    function cambiaAnno() {
+        const annoScelto = parseInt(selettoreAnno.value);
+        const annoPrec = annoScelto - 1;
+
+        for(let i=0; i<12; i++) {
+            // Carica l'anno selezionato (scrivibile)
+            document.getElementById(`input-c-${i}`).value = localStorage.getItem(`db_${annoScelto}_m_${i}`) || '';
+            // Carica l'anno precedente (sola lettura/storico)
+            document.getElementById(`input-p-${i}`).value = localStorage.getItem(`db_${annoPrec}_m_${i}`) || '';
+        }
+        aggiornaTutto();
+    }
 
     function aggiungiVendita() {
         const importoInput = document.getElementById('importoVendita');
@@ -176,7 +207,7 @@
         const vecchioValore = parseFloat(inputMeseCorrente.value) || 0;
         inputMeseCorrente.value = (vecchioValore + valoreVendita).toFixed(2);
 
-        msgCassa.innerText = `€ ${valoreVendita.toLocaleString('it-IT')} aggiunti a ${mesiNomi[meseSelezionato]}!`;
+        msgCassa.innerText = `€ ${valoreVendita.toLocaleString('it-IT')} aggiunti!`;
         importoInput.value = "";
         setTimeout(() => { msgCassa.innerText = ""; }, 3000);
         salvaTutto();
@@ -206,7 +237,7 @@
         const crescitaGen = totaleP > 0 ? ((proiezioneC - totaleP) / totaleP * 100).toFixed(1) : 0;
 
         document.getElementById('stimaAttuale').innerText = proiezioneC.toLocaleString('it-IT', {maximumFractionDigits:0}) + " €";
-        document.getElementById('crescita').innerText = (crescitaGen > 0 ? "+" : "") + crescitaGen + "%";
+        document.getElementById('crescita').innerText = totaleP > 0 ? (crescitaGen > 0 ? "+" : "") + crescitaGen + "%" : "-";
         document.getElementById('crescita').style.color = crescitaGen >= 0 ? "var(--success)" : "var(--danger)";
 
         const analisi = document.getElementById('analisiTarget');
@@ -221,14 +252,15 @@
 
     function disegnaGrafico(corrente, passato) {
         const ctx = document.getElementById('mioGrafico').getContext('2d');
+        const annoS = selettoreAnno.value;
         if (chart) chart.destroy();
         chart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: mesiNomi.map(m => m.substr(0,3)),
                 datasets: [
-                    { label: 'Anno Corrente', data: corrente.map(v => v || null), borderColor: '#2563eb', tension: 0.3, fill: false, borderWidth: 3 },
-                    { label: 'Anno Precedente', data: passato, borderColor: '#cbd5e1', tension: 0.3, fill: false, borderDash: [5,5] }
+                    { label: 'Anno ' + annoS, data: corrente.map(v => v || null), borderColor: '#2563eb', tension: 0.3, fill: false, borderWidth: 3 },
+                    { label: 'Anno Precedente', data: passato.map(v => v || null), borderColor: '#cbd5e1', tension: 0.3, fill: false, borderDash: [5,5] }
                 ]
             },
             options: { plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true } } }
@@ -236,45 +268,29 @@
     }
 
     function salvaTutto() {
-        document.querySelectorAll('.in-c').forEach((el, i) => localStorage.setItem('c_'+i, el.value));
-        document.querySelectorAll('.in-p').forEach((el, i) => localStorage.setItem('p_'+i, el.value));
+        const annoScelto = selettoreAnno.value;
+        document.querySelectorAll('.in-c').forEach((el, i) => {
+            localStorage.setItem(`db_${annoScelto}_m_${i}`, el.value);
+        });
         const msg = document.getElementById('msg');
-        msg.innerText = "✓ Dati salvati e grafici sincronizzati!";
+        msg.innerText = "✓ Dati dell'anno salvati correttamente!";
         setTimeout(() => { msg.innerText = ""; }, 3000);
-        aggiornaTutto();
+        cambiaAnno(); // Ricarica per aggiornare le dipendenze
     }
 
-    function ottieniOggettoDati() {
-        let datiBackup = { corrente: [], precedente: [] };
-        for(let i=0; i<12; i++) {
-            datiBackup.corrente.push(localStorage.getItem('c_'+i) || '');
-            datiBackup.precedente.push(localStorage.getItem('p_'+i) || '');
-        }
-        return datiBackup;
-    }
-
-    function applicaOggettoDati(dati) {
-        if(dati.corrente && dati.precedente) {
-            for(let i=0; i<12; i++) {
-                localStorage.setItem('c_'+i, dati.corrente[i]);
-                localStorage.setItem('p_'+i, dati.precedente[i]);
-                document.getElementById(`input-c-${i}`).value = dati.corrente[i];
-                document.getElementById(`input-p-${i}`).value = dati.precedente[i];
-            }
-            aggiornaTutto();
-            return true;
-        }
-        return false;
-    }
-
-    // INTERFACCIA FILE BACKUP
+    // LOGICA DI ESPORTAZIONE/IMPORTAZIONE COMPLETA (TUTTI GLI ANNI)
     function esportaBackup() {
-        const dati = ottieniOggettoDati();
-        const blob = new Blob([JSON.stringify(dati)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
+        let tuttoIlDB = {};
+        for (let i = 0; i < localStorage.length; i++) {
+            let chiave = localStorage.key(i);
+            if(chiave.startsWith("db_")) {
+                tuttoIlDB[chiave] = localStorage.getItem(chiave);
+            }
+        }
+        const blob = new Blob([JSON.stringify(tuttoIlDB)], { type: "application/json" });
         const a = document.createElement('a');
-        a.href = url;
-        a.download = `backup_fatturato_${new Date().toISOString().slice(0,10)}.json`;
+        a.href = URL.createObjectURL(blob);
+        a.download = `backup_globale_fatturato.json`;
         a.click();
     }
 
@@ -283,44 +299,47 @@
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
-                if (applicaOggettoDati(JSON.parse(e.target.result))) alert("✓ Backup importato dal file!");
-                else alert("File non valido.");
+                const dati = JSON.parse(e.target.result);
+                Object.keys(dati).forEach(chiave => {
+                    if(chiave.startsWith("db_")) localStorage.setItem(chiave, dati[chiave]);
+                });
+                alert("✓ Database completo importato!");
+                cambiaAnno();
             } catch (err) { alert("Errore nel file."); }
         };
         reader.readAsText(file);
     }
 
-    // NUOVA FUNZIONE: INTERFACCIA COPIA/INCOLLA TESTO (SENZA FILE)
     function copiaTestoBackup() {
-        const dati = ottieniOggettoDati();
-        const stringaTesto = btoa(JSON.stringify(dati)); // Codifica il testo in una stringa pulita
+        let tuttoIlDB = {};
+        for (let i = 0; i < localStorage.length; i++) {
+            let chiave = localStorage.key(i);
+            if(chiave.startsWith("db_")) tuttoIlDB[chiave] = localStorage.getItem(chiave);
+        }
+        const stringaTesto = btoa(JSON.stringify(tuttoIlDB));
         navigator.clipboard.writeText(stringaTesto).then(() => {
-            alert("✓ Codice dati copiato negli appunti! Ora puoi inviarlo al telefono tramite messaggio (WhatsApp, Telegram, Mail...)");
-        }).catch(err => {
-            // Alternativa se il browser blocca la clipboard
-            alert("Copia manuale di questo codice:\n\n" + stringaTesto);
-        });
+            alert("✓ Codice di tutti gli anni copiato negli appunti!");
+        }).catch(() => alert("Codice:\n\n" + stringaTesto));
     }
 
     function incollaTestoBackup() {
-        const codiceInput = prompt("Incolla qui il codice di testo che hai copiato dall'altro dispositivo:");
+        const codiceInput = prompt("Incolla qui il codice globale di backup:");
         if (!codiceInput) return;
         try {
-            const stringaDecodificata = atob(codiceInput.trim());
-            const dati = JSON.parse(stringaDecodificata);
-            if (applicaOggettoDati(dati)) {
-                alert("✓ Sincronizzazione testo completata con successo!");
-                salvaTutto();
-            } else { alert("Codice non valido."); }
-        } catch (err) {
-            alert("Il testo inserito non è corretto o è danneggiato.");
-        }
+            const dati = JSON.parse(atob(codiceInput.trim()));
+            Object.keys(dati).forEach(chiave => {
+                if(chiave.startsWith("db_")) localStorage.setItem(chiave, dati[chiave]);
+            });
+            alert("✓ Sincronizzazione globale completata!");
+            cambiaAnno();
+        } catch (err) { alert("Codice non valido."); }
     }
 
     function resetDati() {
-        if(confirm("Vuoi cancellare tutto?")) { localStorage.clear(); location.reload(); }
+        if(confirm("Sei sicuro? Questo cancellerà lo storico di TUTTI gli anni in questo browser.")) { localStorage.clear(); location.reload(); }
     }
-    window.onload = aggiornaTutto;
+
+    window.onload = cambiaAnno;
 </script>
 </body>
 </html>
