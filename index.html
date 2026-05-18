@@ -29,6 +29,7 @@
         .btn-add { background: var(--success); width: auto; padding: 8px 20px; }
         .btn-add:hover { background: #047857; }
         
+        /* Sezione Backup Estesa */
         .backup-title { font-size: 0.85rem; font-weight: bold; color: #64748b; margin-top: 15px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px;}
         .backup-zone { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
         .btn-backup { background: #475569; font-size: 0.8rem; padding: 10px; text-align: center; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; }
@@ -36,6 +37,10 @@
         .btn-text-backup { background: #0284c7; }
         .btn-text-backup:hover { background: #0369a1; }
         
+        /* Tasto di Emergenza Sblocco */
+        .btn-emergency { background: #dc2626; color: white; width: 100%; padding: 10px; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; margin-top: 15px; font-size: 0.85rem; }
+        .btn-emergency:hover { background: #b91c1c; }
+
         .quick-cash { display: flex; gap: 10px; align-items: flex-end; margin-top: 10px; flex-wrap: wrap; }
         .quick-cash div { display: flex; flex-direction: column; gap: 4px; }
 
@@ -110,6 +115,9 @@
             </table>
             <button class="btn btn-save" onclick="salvaTutto()">💾 SALVA DATI ANNO IN CORSO</button>
             <div id="msg"></div>
+
+            <!-- TASTO DI EMERGENZA RECUPERO VECCHIE VERSIONI -->
+            <button class="btn-emergency" onclick="recuperoForzatoInterno()">🔄 SBLOCCA E CONVERTI VECCHI DATI SPARIATI</button>
 
             <div class="backup-title">Metodo 1: Backup tramite file (.json)</div>
             <div class="backup-zone">
@@ -193,11 +201,8 @@
         const annoPrec = annoScelto - 1;
 
         for(let i=0; i<12; i++) {
-            // Carica Vendite e Assistenza separati per l'anno scelto
             document.getElementById(`input-v-${i}`).value = localStorage.getItem(`db_${annoScelto}_v_${i}`) || '';
             document.getElementById(`input-a-${i}`).value = localStorage.getItem(`db_${annoScelto}_a_${i}`) || '';
-            
-            // Per l'anno precedente, mostriamo il totale salvato dell'anno scorso
             document.getElementById(`input-p-${i}`).value = localStorage.getItem(`db_${annoPrec}_tot_${i}`) || '';
         }
         aggiornaTutto();
@@ -206,7 +211,7 @@
     function aggiungiVendita() {
         const importoInput = document.getElementById('importoVendita');
         const valore = parseFloat(importoInput.value);
-        const tipo = document.getElementById('tipoEntrata').value; // 'vendite' o 'assistenza'
+        const tipo = document.getElementById('tipoEntrata').value;
         const meseSelezionato = document.getElementById('meseSelezione').value;
         const msgCassa = document.getElementById('msg-cassa');
 
@@ -241,9 +246,8 @@
             const p = datiP[i];
             const diffCell = document.getElementById(`diff-${i}`);
             
-            // Il totale del mese è la somma di Vendite + Assistenza
             const totaleMeseCorrente = v + a;
-            arrayTotaliMensiles.push(totaleMeseCorrente);
+            arrayTotaliMensili.push(totaleMeseCorrente);
             
             document.getElementById(`tot-mese-${i}`).innerText = totaleMeseCorrente > 0 ? totaleMeseCorrente.toLocaleString('it-IT') + " €" : "0 €";
 
@@ -304,7 +308,6 @@
             localStorage.setItem(`db_${annoScelto}_a_${i}`, el.value);
         });
         
-        // Salviamo anche il totale calcolato di ogni mese per permettere l'analisi dell'anno successivo
         for(let i=0; i<12; i++) {
             const v = parseFloat(document.getElementById(`input-v-${i}`).value) || 0;
             const a = parseFloat(document.getElementById(`input-a-${i}`).value) || 0;
@@ -317,12 +320,43 @@
         cambiaAnno();
     }
 
-    // INTERFACCIA BACKUP COMPLETA (Prende tutti i record db_ del localStorage)
+    // FUNZIONE DI EMERGENZA INTERNA: SBLOCCA E RECUPERA TUTTO AUTOMATICAMENTE
+    function recuperoForzatoInterno() {
+        let convertiti = 0;
+        let annoCorrente = selettoreAnno.value; // Es. 2026
+        let annoPrecedente = annoCorrente - 1;  // Es. 2025
+
+        for(let i=0; i<12; i++) {
+            // Cerca in tutte le vecchie combinazioni usate nei codici precedenti
+            let vecchioValCorrente = localStorage.getItem('c_'+i) || localStorage.getItem('mese_'+i) || localStorage.getItem(`db_${annoCorrente}_m_${i}`);
+            let vecchioValPassato = localStorage.getItem('p_'+i) || localStorage.getItem('fatturato_mese_'+i) || localStorage.getItem(`db_${annoPrecedente}_m_${i}`);
+
+            if(vecchioValCorrente) {
+                localStorage.setItem(`db_${annoCorrente}_v_${i}`, vecchioValCorrente);
+                localStorage.setItem(`db_${annoCorrente}_tot_${i}`, vecchioValCorrente);
+                convertiti++;
+            }
+            if(vecchioValPassato) {
+                localStorage.setItem(`db_${annoPrecedente}_v_${i}`, vecchioValPassato);
+                localStorage.setItem(`db_${annoPrecedente}_tot_${i}`, vecchioValPassato);
+                convertiti++;
+            }
+        }
+
+        if(convertiti > 0) {
+            alert(`✓ Operazione riuscita! Abbiamo recuperato e sistemato i dati nascosti nel browser. Ora la pagina verrà ricaricata.`);
+            cambiaAnno();
+        } else {
+            alert("Non abbiamo trovato dati nel browser da convertire. Se stai usando un telefono nuovo o un browser pulito, usa il tasto 'Importa File' selezionando il file .json scaricato all'inizio dal PC.");
+        }
+    }
+
+    // INTERFACCIA BACKUP COMPLETA
     function ottieniOggettoDati() {
         let tuttoIlDB = {};
         for (let i = 0; i < localStorage.length; i++) {
             let chiave = localStorage.key(i);
-            if(chiave.startsWith("db_")) tuttoIlDB[chiave] = localStorage.getItem(chiave);
+            if(chiave.startsWith("db_") || chiave.startsWith("c_") || chiave.startsWith("p_") || chiave.startsWith("mese_")) tuttoIlDB[chiave] = localStorage.getItem(chiave);
         }
         return tuttoIlDB;
     }
@@ -330,9 +364,8 @@
     function applicaOggettoDati(dati) {
         if(dati && typeof dati === 'object') {
             Object.keys(dati).forEach(chiave => {
-                if(chiave.startsWith("db_")) localStorage.setItem(chiave, dati[chiave]);
+                localStorage.setItem(chiave, dati[chiave]);
             });
-            cambiaAnno();
             return true;
         }
         return false;
@@ -352,8 +385,10 @@
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
-                if (applicaOggettoDati(JSON.parse(e.target.result))) alert("✓ Backup completo caricato!");
-                else alert("File non valido.");
+                if (applicaOggettoDati(JSON.parse(e.target.result))) {
+                    alert("✓ File caricato! Ora premi il tasto rosso di sblocco per convertirlo.");
+                    recuperoForzatoInterno();
+                } else { alert("File non valido."); }
             } catch (err) { alert("Errore nel file."); }
         };
         reader.readAsText(file);
@@ -371,7 +406,8 @@
         if (!codiceInput) return;
         try {
             if (applicaOggettoDati(JSON.parse(atob(codiceInput.trim())))) {
-                alert("✓ Database sincronizzato!");
+                alert("✓ Codice inserito! Ora premi il tasto rosso di sblocco per fare la conversione.");
+                recuperoForzatoInterno();
             } else { alert("Codice non valido."); }
         } catch (err) { alert("Errore nella lettura del codice."); }
     }
