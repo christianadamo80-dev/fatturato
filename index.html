@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Year Business Dashboard</title>
+    <title>Multi-Year Business Dashboard + Assistenza</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #2563eb; --secondary: #94a3b8; --success: #059669; --danger: #ef4444; --bg: #f8fafc; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1e293b; }
-        .container { max-width: 1100px; margin: auto; }
-        .grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 20px; }
+        .container { max-width: 1200px; margin: auto; }
+        .grid { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 20px; }
         .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
         .header-tools { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
@@ -17,9 +17,9 @@
 
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; font-size: 0.75rem; color: #64748b; padding: 10px 5px; border-bottom: 1px solid #e2e8f0; }
-        td { padding: 8px 5px; border-bottom: 1px solid #f1f5f9; }
+        td { padding: 6px 4px; border-bottom: 1px solid #f1f5f9; }
         
-        input, select { width: 85%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; }
+        input, select { width: 90%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem; box-sizing: border-box; }
         input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
         input[disabled] { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
         
@@ -36,7 +36,7 @@
         .btn-text-backup { background: #0284c7; }
         .btn-text-backup:hover { background: #0369a1; }
         
-        .quick-cash { display: flex; gap: 10px; align-items: flex-end; margin-top: 10px; }
+        .quick-cash { display: flex; gap: 10px; align-items: flex-end; margin-top: 10px; flex-wrap: wrap; }
         .quick-cash div { display: flex; flex-direction: column; gap: 4px; }
 
         .diff-pos { color: var(--success); font-weight: bold; font-size: 0.85rem; }
@@ -51,7 +51,7 @@
         #msg, #msg-cassa { text-align: center; color: var(--success); height: 20px; font-weight: bold; font-size: 0.9rem; margin-top: 5px; }
         
         .btn-reset { display: block; margin: 20px auto 0; background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.8rem; text-decoration: underline; }
-        @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+        @media (max-width: 950px) { .grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -60,7 +60,7 @@
     
     <!-- BARRA DI CONTROLLO ANNO -->
     <div class="header-tools">
-        <h2 style="margin: 0; font-size: 1.3rem;">Dashboard Fatturato</h2>
+        <h2 style="margin: 0; font-size: 1.3rem;">Dashboard Fatturato Avanzata</h2>
         <div>
             <label style="font-size: 0.85rem; font-weight: bold; color: #64748b; margin-right: 10px;">Anno di Lavoro:</label>
             <select id="selettoreAnno" class="select-anno" onchange="cambiaAnno()"></select>
@@ -69,31 +69,40 @@
     
     <!-- REGISTRA VENDITA AL VOLO -->
     <div class="card">
-        <h3>➕ Registra Nuova Vendita</h3>
+        <h3>➕ Registra Incasso Rapido</h3>
         <div class="quick-cash">
-            <div style="flex: 2;">
-                <label style="font-size: 0.8rem; font-weight: bold; color: #64748b;">Importo Vendita (€)</label>
-                <input type="number" id="importoVendita" placeholder="Es. 1500" step="any">
+            <div style="flex: 1.5; min-width: 150px;">
+                <label style="font-size: 0.8rem; font-weight: bold; color: #64748b;">Importo (€)</label>
+                <input type="number" id="importoVendita" placeholder="Es. 500" step="any">
             </div>
-            <div style="flex: 1;">
-                <label style="font-size: 0.8rem; font-weight: bold; color: #64748b;">Mese destinazione</label>
+            <div style="flex: 1.5; min-width: 150px;">
+                <label style="font-size: 0.8rem; font-weight: bold; color: #64748b;">Tipo Entrata</label>
+                <select id="tipoEntrata">
+                    <option value="vendite">Vendite Standard / Prodotti</option>
+                    <option value="assistenza">Assistenza / Servizi</option>
+                </select>
+            </div>
+            <div style="flex: 1; min-width: 120px;">
+                <label style="font-size: 0.8rem; font-weight: bold; color: #64748b;">Mese</label>
                 <select id="meseSelezione"></select>
             </div>
-            <button class="btn btn-add" onclick="aggiungiVendita()">Aggiungi al Mese</button>
+            <button class="btn btn-add" onclick="aggiungiVendita()">Aggiungi Incasso</button>
         </div>
         <div id="msg-cassa"></div>
     </div>
 
     <div class="grid">
         <!-- SEZIONE TABELLA -->
-        <div class="card">
-            <h3>Dati Mensili e Variazione %</h3>
+        <div class="card" style="overflow-x: auto;">
+            <h3>Dati Mensili Disaggregati</h3>
             <table>
                 <thead>
                     <tr>
                         <th>MESE</th>
-                        <th>ANNO SELEZ. (€)</th>
-                        <th>ANNO PREC. (€)</th>
+                        <th>VENDITE (€)</th>
+                        <th>ASSISTENZA (€)</th>
+                        <th style="background: #f8fafc; font-weight: bold;">TOTALE (€)</th>
+                        <th>PREC. (€)</th>
                         <th style="text-align:right">VAR. %</th>
                     </tr>
                 </thead>
@@ -121,7 +130,7 @@
         <!-- DASHBOARD RISULTATI -->
         <div>
             <div class="card">
-                <h3>Trend Grafico</h3>
+                <h3>Trend Grafico (Totale)</h3>
                 <canvas id="mioGrafico"></canvas>
             </div>
             
@@ -148,7 +157,6 @@
     const mesiNomi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
     let chart;
     
-    // Genera gli anni nel menu a tendina (dal 2025 al 2035)
     const selettoreAnno = document.getElementById('selettoreAnno');
     const annoAttualeReale = new Date().getFullYear();
     for(let a = 2025; a <= 2035; a++) {
@@ -162,14 +170,15 @@
     const selectMese = document.getElementById('meseSelezione');
     const meseCorrenteReale = new Date().getMonth();
 
-    // Inizializza i 12 mesi in tabella
     mesiNomi.forEach((mese, i) => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td style="font-weight:bold; font-size:0.85rem">${mese}</td>
-            <td><input type="number" class="in-c" id="input-c-${i}" data-i="${i}" oninput="aggiornaTutto()"></td>
-            <td><input type="number" class="in-p" id="input-p-${i}" data-i="${i}" disabled></td>
-            <td id="diff-${i}" style="text-align:right">-</td>
+            <td style="font-weight:bold; font-size:0.8rem">${mese}</td>
+            <td><input type="number" class="in-v" id="input-v-${i}" oninput="aggiornaTutto()" placeholder="0"></td>
+            <td><input type="number" class="in-a" id="input-a-${i}" oninput="aggiornaTutto()" placeholder="0"></td>
+            <td id="tot-mese-${i}" style="font-weight:bold; background: #f8fafc; font-size:0.9rem;">0 €</td>
+            <td><input type="number" class="in-p" id="input-p-${i}" disabled placeholder="0"></td>
+            <td id="diff-${i}" style="text-align:right; font-size:0.85rem;">-</td>
         `;
         tbody.appendChild(row);
 
@@ -179,75 +188,94 @@
         selectMese.appendChild(opt);
     });
 
-    // Cambia anno di lavoro e aggiorna i campi caricando dal localStorage
     function cambiaAnno() {
         const annoScelto = parseInt(selettoreAnno.value);
         const annoPrec = annoScelto - 1;
 
         for(let i=0; i<12; i++) {
-            // Carica l'anno selezionato (scrivibile)
-            document.getElementById(`input-c-${i}`).value = localStorage.getItem(`db_${annoScelto}_m_${i}`) || '';
-            // Carica l'anno precedente (sola lettura/storico)
-            document.getElementById(`input-p-${i}`).value = localStorage.getItem(`db_${annoPrec}_m_${i}`) || '';
+            // Carica Vendite e Assistenza separati per l'anno scelto
+            document.getElementById(`input-v-${i}`).value = localStorage.getItem(`db_${annoScelto}_v_${i}`) || '';
+            document.getElementById(`input-a-${i}`).value = localStorage.getItem(`db_${annoScelto}_a_${i}`) || '';
+            
+            // Per l'anno precedente, mostriamo il totale salvato dell'anno scorso
+            document.getElementById(`input-p-${i}`).value = localStorage.getItem(`db_${annoPrec}_tot_${i}`) || '';
         }
         aggiornaTutto();
     }
 
     function aggiungiVendita() {
         const importoInput = document.getElementById('importoVendita');
-        const valoreVendita = parseFloat(importoInput.value);
+        const valore = parseFloat(importoInput.value);
+        const tipo = document.getElementById('tipoEntrata').value; // 'vendite' o 'assistenza'
         const meseSelezionato = document.getElementById('meseSelezione').value;
         const msgCassa = document.getElementById('msg-cassa');
 
-        if (isNaN(valoreVendita) || valoreVendita <= 0) {
+        if (isNaN(valore) || valore <= 0) {
             alert("Inserisci un importo valido."); return;
         }
 
-        const inputMeseCorrente = document.getElementById(`input-c-${meseSelezionato}`);
-        const vecchioValore = parseFloat(inputMeseCorrente.value) || 0;
-        inputMeseCorrente.value = (vecchioValore + valoreVendita).toFixed(2);
+        const idInput = (tipo === 'vendite') ? `input-v-${meseSelezionato}` : `input-a-${meseSelezionato}`;
+        const inputMese = document.getElementById(idInput);
+        const vecchioValore = parseFloat(inputMese.value) || 0;
+        inputMese.value = (vecchioValore + valore).toFixed(2);
 
-        msgCassa.innerText = `€ ${valoreVendita.toLocaleString('it-IT')} aggiunti!`;
+        msgCassa.innerText = `€ ${valore.toLocaleString('it-IT')} aggiunti a ${tipo.toUpperCase()} di ${mesiNomi[meseSelezionato]}!`;
         importoInput.value = "";
         setTimeout(() => { msgCassa.innerText = ""; }, 3000);
         salvaTutto();
     }
 
     function aggiornaTutto() {
-        const datiC = Array.from(document.querySelectorAll('.in-c')).map(i => parseFloat(i.value) || 0);
+        const datiV = Array.from(document.querySelectorAll('.in-v')).map(i => parseFloat(i.value) || 0);
+        const datiA = Array.from(document.querySelectorAll('.in-a')).map(i => parseFloat(i.value) || 0);
         const datiP = Array.from(document.querySelectorAll('.in-p')).map(i => parseFloat(i.value) || 0);
-        let totaleC = 0; let mesiC = 0; let totaleP = 0;
+        
+        let totaleAnnoCorrente = 0; 
+        let mesiCompilati = 0; 
+        let totaleAnnoPrecedente = 0;
+        let arrayTotaliMensili = [];
 
-        datiC.forEach((v, i) => {
+        for(let i=0; i<12; i++) {
+            const v = datiV[i];
+            const a = datiA[i];
             const p = datiP[i];
             const diffCell = document.getElementById(`diff-${i}`);
             
-            if (v > 0 && p > 0) {
-                const varPerc = ((v - p) / p * 100).toFixed(1);
+            // Il totale del mese è la somma di Vendite + Assistenza
+            const totaleMeseCorrente = v + a;
+            arrayTotaliMensiles.push(totaleMeseCorrente);
+            
+            document.getElementById(`tot-mese-${i}`).innerText = totaleMeseCorrente > 0 ? totaleMeseCorrente.toLocaleString('it-IT') + " €" : "0 €";
+
+            if (totaleMeseCorrente > 0 && p > 0) {
+                const varPerc = ((totaleMeseCorrente - p) / p * 100).toFixed(1);
                 if (varPerc > 0) diffCell.innerHTML = `<span class="diff-pos">↑ ${varPerc}%</span>`;
                 else if (varPerc < 0) diffCell.innerHTML = `<span class="diff-neg">↓ ${Math.abs(varPerc)}%</span>`;
                 else diffCell.innerHTML = `<span class="diff-null">0%</span>`;
             } else { diffCell.innerText = "-"; }
 
-            if(v > 0) { totaleC += v; mesiC++; }
-            totaleP += p;
-        });
+            if(v > 0 || a > 0) { 
+                totaleAnnoCorrente += totaleMeseCorrente; 
+                mesiCompilati++; 
+            }
+            totaleAnnoPrecedente += p;
+        }
 
-        const proiezioneC = mesiC > 0 ? (totaleC / mesiC) * 12 : 0;
-        const crescitaGen = totaleP > 0 ? ((proiezioneC - totaleP) / totaleP * 100).toFixed(1) : 0;
+        const proiezioneC = mesiCompilati > 0 ? (totaleAnnoCorrente / mesiCompilati) * 12 : 0;
+        const crescitaGen = totaleAnnoPrecedente > 0 ? ((proiezioneC - totaleAnnoPrecedente) / totaleAnnoPrecedente * 100).toFixed(1) : 0;
 
         document.getElementById('stimaAttuale').innerText = proiezioneC.toLocaleString('it-IT', {maximumFractionDigits:0}) + " €";
-        document.getElementById('crescita').innerText = totaleP > 0 ? (crescitaGen > 0 ? "+" : "") + crescitaGen + "%" : "-";
+        document.getElementById('crescita').innerText = totaleAnnoPrecedente > 0 ? (crescitaGen > 0 ? "+" : "") + crescitaGen + "%" : "-";
         document.getElementById('crescita').style.color = crescitaGen >= 0 ? "var(--success)" : "var(--danger)";
 
         const analisi = document.getElementById('analisiTarget');
         if (proiezioneC < 1000000) {
-            const residuo = (1000000 - totaleC) / (12 - mesiC);
-            analisi.innerHTML = `Mancano <b>${(1000000 - proiezioneC).toLocaleString('it-IT')}€</b> alla stima del milione.<br>Target mesi rimasti: <b>${mesiC < 12 ? residuo.toLocaleString('it-IT', {maximumFractionDigits:0}) : 0}€/mese</b>.`;
+            const residuo = (1000000 - totaleAnnoCorrente) / (12 - mesiCompilati);
+            analisi.innerHTML = `Mancano <b>${(1000000 - proiezioneC).toLocaleString('it-IT')}€</b> al milione.<br>Target mesi rimasti: <b>${mesiCompilati < 12 ? residuo.toLocaleString('it-IT', {maximumFractionDigits:0}) : 0}€/mese</b>.`;
         } else {
-            analisi.innerHTML = "✨ <b>Target Milione Raggiunto!</b> Mantieni questa media per chiudere l'anno in bellezza.";
+            analisi.innerHTML = "✨ <b>Target Milione Raggiunto!</b> Mantieni questa media complessiva.";
         }
-        disegnaGrafico(datiC, datiP);
+        disegnaGrafico(arrayTotaliMensili, datiP);
     }
 
     function disegnaGrafico(corrente, passato) {
@@ -259,8 +287,8 @@
             data: {
                 labels: mesiNomi.map(m => m.substr(0,3)),
                 datasets: [
-                    { label: 'Anno ' + annoS, data: corrente.map(v => v || null), borderColor: '#2563eb', tension: 0.3, fill: false, borderWidth: 3 },
-                    { label: 'Anno Precedente', data: passato.map(v => v || null), borderColor: '#cbd5e1', tension: 0.3, fill: false, borderDash: [5,5] }
+                    { label: 'Totale ' + annoS, data: corrente.map(v => v || null), borderColor: '#2563eb', tension: 0.3, fill: false, borderWidth: 3 },
+                    { label: 'Totale Prec.', data: passato.map(v => v || null), borderColor: '#cbd5e1', tension: 0.3, fill: false, borderDash: [5,5] }
                 ]
             },
             options: { plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true } } }
@@ -269,28 +297,53 @@
 
     function salvaTutto() {
         const annoScelto = selettoreAnno.value;
-        document.querySelectorAll('.in-c').forEach((el, i) => {
-            localStorage.setItem(`db_${annoScelto}_m_${i}`, el.value);
+        document.querySelectorAll('.in-v').forEach((el, i) => {
+            localStorage.setItem(`db_${annoScelto}_v_${i}`, el.value);
         });
+        document.querySelectorAll('.in-a').forEach((el, i) => {
+            localStorage.setItem(`db_${annoScelto}_a_${i}`, el.value);
+        });
+        
+        // Salviamo anche il totale calcolato di ogni mese per permettere l'analisi dell'anno successivo
+        for(let i=0; i<12; i++) {
+            const v = parseFloat(document.getElementById(`input-v-${i}`).value) || 0;
+            const a = parseFloat(document.getElementById(`input-a-${i}`).value) || 0;
+            localStorage.setItem(`db_${annoScelto}_tot_${i}`, (v + a).toFixed(2));
+        }
+
         const msg = document.getElementById('msg');
-        msg.innerText = "✓ Dati dell'anno salvati correttamente!";
+        msg.innerText = "✓ Dati di Vendite e Assistenza salvati!";
         setTimeout(() => { msg.innerText = ""; }, 3000);
-        cambiaAnno(); // Ricarica per aggiornare le dipendenze
+        cambiaAnno();
     }
 
-    // LOGICA DI ESPORTAZIONE/IMPORTAZIONE COMPLETA (TUTTI GLI ANNI)
-    function esportaBackup() {
+    // INTERFACCIA BACKUP COMPLETA (Prende tutti i record db_ del localStorage)
+    function ottieniOggettoDati() {
         let tuttoIlDB = {};
         for (let i = 0; i < localStorage.length; i++) {
             let chiave = localStorage.key(i);
-            if(chiave.startsWith("db_")) {
-                tuttoIlDB[chiave] = localStorage.getItem(chiave);
-            }
+            if(chiave.startsWith("db_")) tuttoIlDB[chiave] = localStorage.getItem(chiave);
         }
-        const blob = new Blob([JSON.stringify(tuttoIlDB)], { type: "application/json" });
+        return tuttoIlDB;
+    }
+
+    function applicaOggettoDati(dati) {
+        if(dati && typeof dati === 'object') {
+            Object.keys(dati).forEach(chiave => {
+                if(chiave.startsWith("db_")) localStorage.setItem(chiave, dati[chiave]);
+            });
+            cambiaAnno();
+            return true;
+        }
+        return false;
+    }
+
+    function esportaBackup() {
+        const dati = ottieniOggettoDati();
+        const blob = new Blob([JSON.stringify(dati)], { type: "application/json" });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `backup_globale_fatturato.json`;
+        a.download = `backup_aziendale_completo.json`;
         a.click();
     }
 
@@ -299,44 +352,32 @@
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
-                const dati = JSON.parse(e.target.result);
-                Object.keys(dati).forEach(chiave => {
-                    if(chiave.startsWith("db_")) localStorage.setItem(chiave, dati[chiave]);
-                });
-                alert("✓ Database completo importato!");
-                cambiaAnno();
+                if (applicaOggettoDati(JSON.parse(e.target.result))) alert("✓ Backup completo caricato!");
+                else alert("File non valido.");
             } catch (err) { alert("Errore nel file."); }
         };
         reader.readAsText(file);
     }
 
     function copiaTestoBackup() {
-        let tuttoIlDB = {};
-        for (let i = 0; i < localStorage.length; i++) {
-            let chiave = localStorage.key(i);
-            if(chiave.startsWith("db_")) tuttoIlDB[chiave] = localStorage.getItem(chiave);
-        }
-        const stringaTesto = btoa(JSON.stringify(tuttoIlDB));
+        const stringaTesto = btoa(JSON.stringify(ottieniOggettoDati()));
         navigator.clipboard.writeText(stringaTesto).then(() => {
-            alert("✓ Codice di tutti gli anni copiato negli appunti!");
+            alert("✓ Codice copiato negli appunti!");
         }).catch(() => alert("Codice:\n\n" + stringaTesto));
     }
 
     function incollaTestoBackup() {
-        const codiceInput = prompt("Incolla qui il codice globale di backup:");
+        const codiceInput = prompt("Incolla qui il codice di backup:");
         if (!codiceInput) return;
         try {
-            const dati = JSON.parse(atob(codiceInput.trim()));
-            Object.keys(dati).forEach(chiave => {
-                if(chiave.startsWith("db_")) localStorage.setItem(chiave, dati[chiave]);
-            });
-            alert("✓ Sincronizzazione globale completata!");
-            cambiaAnno();
-        } catch (err) { alert("Codice non valido."); }
+            if (applicaOggettoDati(JSON.parse(atob(codiceInput.trim())))) {
+                alert("✓ Database sincronizzato!");
+            } else { alert("Codice non valido."); }
+        } catch (err) { alert("Errore nella lettura del codice."); }
     }
 
     function resetDati() {
-        if(confirm("Sei sicuro? Questo cancellerà lo storico di TUTTI gli anni in questo browser.")) { localStorage.clear(); location.reload(); }
+        if(confirm("Attenzione! Questo cancellerà TUTTI i dati inseriti per tutti gli anni.")) { localStorage.clear(); location.reload(); }
     }
 
     window.onload = cambiaAnno;
