@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Business Dashboard Pro + Cassa</title>
+    <title>Business Dashboard Pro + Cassa & Cloud Backup</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #2563eb; --secondary: #94a3b8; --success: #059669; --danger: #ef4444; --bg: #f8fafc; }
@@ -24,6 +24,14 @@
         .btn-save:hover { background: #1d4ed8; }
         .btn-add { background: var(--success); width: auto; padding: 8px 20px; }
         .btn-add:hover { background: #047857; }
+        
+        /* Sezione Backup Estesa */
+        .backup-title { font-size: 0.85rem; font-weight: bold; color: #64748b; margin-top: 15px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .backup-zone { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .btn-backup { background: #475569; font-size: 0.8rem; padding: 10px; text-align: center; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; }
+        .btn-backup:hover { background: #334155; }
+        .btn-text-backup { background: #0284c7; }
+        .btn-text-backup:hover { background: #0369a1; }
         
         .quick-cash { display: flex; gap: 10px; align-items: flex-end; margin-top: 10px; }
         .quick-cash div { display: flex; flex-direction: column; gap: 4px; }
@@ -48,7 +56,7 @@
 <div class="container">
     <h2 style="text-align: center; margin-bottom: 30px;">Analisi Performance Mensile & Cassa</h2>
     
-    <!-- NUOVA SEZIONE: REGISTRA VENDITA AL VOLO -->
+    <!-- REGISTRA VENDITA AL VOLO -->
     <div class="card">
         <h3>➕ Registra Nuova Vendita</h3>
         <div class="quick-cash">
@@ -82,6 +90,23 @@
             </table>
             <button class="btn btn-save" onclick="salvaTutto()">💾 SALVA TUTTO NEL BROWSER</button>
             <div id="msg"></div>
+
+            <!-- OPZIONE 1: BACKUP TRAMITE FILE (PER GOOGLE DRIVE) -->
+            <div class="backup-title">Metodo 1: Backup tramite file (.json)</div>
+            <div class="backup-zone">
+                <button class="btn-backup" onclick="esportaBackup()">📥 Esporta File</button>
+                <label class="btn-backup">
+                    📤 Importa File
+                    <input type="file" id="importFile" accept=".json" onchange="importaBackup(this)" style="display:none;">
+                </label>
+            </div>
+
+            <!-- OPZIONE 2: BACKUP RAPIDO COPIA/INCOLLA -->
+            <div class="backup-title">Metodo 2: Sincronizzazione rapida Copia/Incolla</div>
+            <div class="backup-zone">
+                <button class="btn-backup btn-text-backup" onclick="copiaTestoBackup()">📋 Copia Dati (Testo)</button>
+                <button class="btn-backup btn-text-backup" onclick="incollaTestoBackup()">📥 Incolla Dati (Testo)</button>
+            </div>
         </div>
 
         <!-- DASHBOARD RISULTATI -->
@@ -114,13 +139,11 @@
     const mesiNomi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
     let chart;
 
-    // Inizializzazione Tabella e Menu a tendina
     const tbody = document.getElementById('tabellaMesi');
     const selectMese = document.getElementById('meseSelezione');
-    const meseCorrenteReale = new Date().getMonth(); // Rileva il mese attuale del PC/Telefono (0 = Gennaio)
+    const meseCorrenteReale = new Date().getMonth();
 
     mesiNomi.forEach((mese, i) => {
-        // Tabella
         const row = document.createElement('tr');
         const valC = localStorage.getItem('c_'+i) || '';
         const valP = localStorage.getItem('p_'+i) || '';
@@ -133,15 +156,12 @@
         `;
         tbody.appendChild(row);
 
-        // Opzioni Menu Select
         const opt = document.createElement('option');
-        opt.value = i;
-        opt.innerText = mese;
-        if(i === meseCorrenteReale) opt.selected = true; // Seleziona automaticamente il mese corrente
+        opt.value = i; opt.innerText = mese;
+        if(i === meseCorrenteReale) opt.selected = true;
         selectMese.appendChild(opt);
     });
 
-    // FUNZIONE PER SOMMARE UNA VENDITA AL VOLO
     function aggiungiVendita() {
         const importoInput = document.getElementById('importoVendita');
         const valoreVendita = parseFloat(importoInput.value);
@@ -149,31 +169,22 @@
         const msgCassa = document.getElementById('msg-cassa');
 
         if (isNaN(valoreVendita) || valoreVendita <= 0) {
-            alert("Inserisci un importo valido superiore a 0.");
-            return;
+            alert("Inserisci un importo valido."); return;
         }
 
         const inputMeseCorrente = document.getElementById(`input-c-${meseSelezionato}`);
         const vecchioValore = parseFloat(inputMeseCorrente.value) || 0;
-        
-        // Fai la somma aritmetica
-        const nuovoValore = vecchioValore + valoreVendita;
-        inputMeseCorrente.value = nuovoValore.toFixed(2);
+        inputMeseCorrente.value = (vecchioValore + valoreVendita).toFixed(2);
 
-        // Notifica visiva di successo
-        msgCassa.innerText = `€ ${valoreVendita.toLocaleString('it-IT')} aggiunti con successo a ${mesiNomi[meseSelezionato]}!`;
-        importoInput.value = ""; // Svuota il campo dell'importo per la prossima vendita
-        
+        msgCassa.innerText = `€ ${valoreVendita.toLocaleString('it-IT')} aggiunti a ${mesiNomi[meseSelezionato]}!`;
+        importoInput.value = "";
         setTimeout(() => { msgCassa.innerText = ""; }, 3000);
-
-        // Salva in automatico per sicurezza e aggiorna la schermata
         salvaTutto();
     }
 
     function aggiornaTutto() {
         const datiC = Array.from(document.querySelectorAll('.in-c')).map(i => parseFloat(i.value) || 0);
         const datiP = Array.from(document.querySelectorAll('.in-p')).map(i => parseFloat(i.value) || 0);
-        
         let totaleC = 0; let mesiC = 0; let totaleP = 0;
 
         datiC.forEach((v, i) => {
@@ -185,9 +196,7 @@
                 if (varPerc > 0) diffCell.innerHTML = `<span class="diff-pos">↑ ${varPerc}%</span>`;
                 else if (varPerc < 0) diffCell.innerHTML = `<span class="diff-neg">↓ ${Math.abs(varPerc)}%</span>`;
                 else diffCell.innerHTML = `<span class="diff-null">0%</span>`;
-            } else {
-                diffCell.innerText = "-";
-            }
+            } else { diffCell.innerText = "-"; }
 
             if(v > 0) { totaleC += v; mesiC++; }
             totaleP += p;
@@ -203,11 +212,10 @@
         const analisi = document.getElementById('analisiTarget');
         if (proiezioneC < 1000000) {
             const residuo = (1000000 - totaleC) / (12 - mesiC);
-            analisi.innerHTML = `Per il milione mancano <b>${(1000000 - proiezioneC).toLocaleString('it-IT')}€</b> sulla stima.<br>Target mesi restanti: <b>${mesiC < 12 ? residuo.toLocaleString('it-IT', {maximumFractionDigits:0}) : 0}€/mese</b>.`;
+            analisi.innerHTML = `Mancano <b>${(1000000 - proiezioneC).toLocaleString('it-IT')}€</b> alla stima del milione.<br>Target mesi rimasti: <b>${mesiC < 12 ? residuo.toLocaleString('it-IT', {maximumFractionDigits:0}) : 0}€/mese</b>.`;
         } else {
             analisi.innerHTML = "✨ <b>Target Milione Raggiunto!</b> Mantieni questa media per chiudere l'anno in bellezza.";
         }
-
         disegnaGrafico(datiC, datiP);
     }
 
@@ -236,12 +244,83 @@
         aggiornaTutto();
     }
 
+    function ottieniOggettoDati() {
+        let datiBackup = { corrente: [], precedente: [] };
+        for(let i=0; i<12; i++) {
+            datiBackup.corrente.push(localStorage.getItem('c_'+i) || '');
+            datiBackup.precedente.push(localStorage.getItem('p_'+i) || '');
+        }
+        return datiBackup;
+    }
+
+    function applicaOggettoDati(dati) {
+        if(dati.corrente && dati.precedente) {
+            for(let i=0; i<12; i++) {
+                localStorage.setItem('c_'+i, dati.corrente[i]);
+                localStorage.setItem('p_'+i, dati.precedente[i]);
+                document.getElementById(`input-c-${i}`).value = dati.corrente[i];
+                document.getElementById(`input-p-${i}`).value = dati.precedente[i];
+            }
+            aggiornaTutto();
+            return true;
+        }
+        return false;
+    }
+
+    // INTERFACCIA FILE BACKUP
+    function esportaBackup() {
+        const dati = ottieniOggettoDati();
+        const blob = new Blob([JSON.stringify(dati)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `backup_fatturato_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+    }
+
+    function importaBackup(input) {
+        const file = input.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                if (applicaOggettoDati(JSON.parse(e.target.result))) alert("✓ Backup importato dal file!");
+                else alert("File non valido.");
+            } catch (err) { alert("Errore nel file."); }
+        };
+        reader.readAsText(file);
+    }
+
+    // NUOVA FUNZIONE: INTERFACCIA COPIA/INCOLLA TESTO (SENZA FILE)
+    function copiaTestoBackup() {
+        const dati = ottieniOggettoDati();
+        const stringaTesto = btoa(JSON.stringify(dati)); // Codifica il testo in una stringa pulita
+        navigator.clipboard.writeText(stringaTesto).then(() => {
+            alert("✓ Codice dati copiato negli appunti! Ora puoi inviarlo al telefono tramite messaggio (WhatsApp, Telegram, Mail...)");
+        }).catch(err => {
+            // Alternativa se il browser blocca la clipboard
+            alert("Copia manuale di questo codice:\n\n" + stringaTesto);
+        });
+    }
+
+    function incollaTestoBackup() {
+        const codiceInput = prompt("Incolla qui il codice di testo che hai copiato dall'altro dispositivo:");
+        if (!codiceInput) return;
+        try {
+            const stringaDecodificata = atob(codiceInput.trim());
+            const dati = JSON.parse(stringaDecodificata);
+            if (applicaOggettoDati(dati)) {
+                alert("✓ Sincronizzazione testo completata con successo!");
+                salvaTutto();
+            } else { alert("Codice non valido."); }
+        } catch (err) {
+            alert("Il testo inserito non è corretto o è danneggiato.");
+        }
+    }
+
     function resetDati() {
         if(confirm("Vuoi cancellare tutto?")) { localStorage.clear(); location.reload(); }
     }
-
     window.onload = aggiornaTutto;
 </script>
-
 </body>
 </html>
