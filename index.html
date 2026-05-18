@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Year Business Dashboard + Assistenza</title>
+    <title>Multi-Year Business Dashboard + Assistenza Avanzata</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --primary: #2563eb; --secondary: #94a3b8; --success: #059669; --danger: #ef4444; --bg: #f8fafc; }
+        :root { --primary: #2563eb; --secondary: #94a3b8; --success: #059669; --danger: #ef4444; --bg: #f8fafc; --info: #0284c7; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1e293b; }
-        .container { max-width: 1200px; margin: auto; }
-        .grid { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 20px; }
+        .container { max-width: 1250px; margin: auto; }
+        .grid { display: grid; grid-template-columns: 1.35fr 0.65fr; gap: 20px; }
         .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
         .header-tools { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
@@ -19,7 +19,9 @@
         th { text-align: left; font-size: 0.75rem; color: #64748b; padding: 10px 5px; border-bottom: 1px solid #e2e8f0; }
         td { padding: 6px 4px; border-bottom: 1px solid #f1f5f9; }
         
-        input, select { width: 90%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem; box-sizing: border-box; }
+        /* Allargamento colonna totale e stile input */
+        .col-totale { width: 140px; min-width: 140px; background: #f1f5f9; font-weight: bold; font-size: 0.95rem; text-align: center; }
+        input, select { width: 95%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem; box-sizing: border-box; }
         input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
         input[disabled] { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
         
@@ -29,15 +31,13 @@
         .btn-add { background: var(--success); width: auto; padding: 8px 20px; }
         .btn-add:hover { background: #047857; }
         
-        /* Sezione Backup Estesa */
-        .backup-title { font-size: 0.85rem; font-weight: bold; color: #64748b; margin-top: 15px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .backup-title { font-size: 0.85rem; font-weight: bold; color: #64748b; margin-top: 20px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px;}
         .backup-zone { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
         .btn-backup { background: #475569; font-size: 0.8rem; padding: 10px; text-align: center; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; }
         .btn-backup:hover { background: #334155; }
         .btn-text-backup { background: #0284c7; }
         .btn-text-backup:hover { background: #0369a1; }
         
-        /* Tasto di Emergenza Sblocco */
         .btn-emergency { background: #dc2626; color: white; width: 100%; padding: 10px; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; margin-top: 15px; font-size: 0.85rem; }
         .btn-emergency:hover { background: #b91c1c; }
 
@@ -47,6 +47,7 @@
         .diff-pos { color: var(--success); font-weight: bold; font-size: 0.85rem; }
         .diff-neg { color: var(--danger); font-weight: bold; font-size: 0.85rem; }
         .diff-null { color: #94a3b8; font-size: 0.85rem; }
+        .info-assistenza { color: var(--info); font-weight: 600; font-size: 0.85rem; }
 
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
         .stat-box { background: #f1f5f9; padding: 15px; border-radius: 10px; text-align: center; }
@@ -106,17 +107,30 @@
                         <th>MESE</th>
                         <th>VENDITE (€)</th>
                         <th>ASSISTENZA (€)</th>
-                        <th style="background: #f8fafc; font-weight: bold;">TOTALE (€)</th>
+                        <th class="col-totale">TOTALE (€)</th>
                         <th>PREC. (€)</th>
                         <th style="text-align:right">VAR. %</th>
                     </tr>
                 </thead>
                 <tbody id="tabellaMesi"></tbody>
             </table>
+            
             <button class="btn btn-save" onclick="salvaTutto()">💾 SALVA DATI ANNO IN CORSO</button>
             <div id="msg"></div>
 
-            <!-- TASTO DI EMERGENZA RECUPERO VECCHIE VERSIONI -->
+            <!-- NUOVA SEZIONE DI IMPATTO ASSISTENZA -->
+            <h3 style="margin-top: 30px; border-top: 2px solid #e2e8f0; padding-top: 15px;">📊 Dettaglio e Impatto Assistenza</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">Mese</th>
+                        <th style="width: 45%;">Impatto dell'Assistenza sul mese</th>
+                        <th style="width: 30%; text-align: right;">Differenza Generata</th>
+                    </tr>
+                </thead>
+                <tbody id="tabellaImpatto"></tbody>
+            </table>
+
             <button class="btn-emergency" onclick="recuperoForzatoInterno()">🔄 SBLOCCA E CONVERTI VECCHI DATI SPARIATI</button>
 
             <div class="backup-title">Metodo 1: Backup tramite file (.json)</div>
@@ -175,20 +189,31 @@
     }
 
     const tbody = document.getElementById('tabellaMesi');
+    const tbodyImpatto = document.getElementById('tabellaImpatto');
     const selectMese = document.getElementById('meseSelezione');
     const meseCorrenteReale = new Date().getMonth();
 
     mesiNomi.forEach((mese, i) => {
+        // RIGA TABELLA PRINCIPALE
         const row = document.createElement('tr');
         row.innerHTML = `
             <td style="font-weight:bold; font-size:0.8rem">${mese}</td>
             <td><input type="number" class="in-v" id="input-v-${i}" oninput="aggiornaTutto()" placeholder="0"></td>
             <td><input type="number" class="in-a" id="input-a-${i}" oninput="aggiornaTutto()" placeholder="0"></td>
-            <td id="tot-mese-${i}" style="font-weight:bold; background: #f8fafc; font-size:0.9rem;">0 €</td>
+            <td id="tot-mese-${i}" class="col-totale">0 €</td>
             <td><input type="number" class="in-p" id="input-p-${i}" disabled placeholder="0"></td>
             <td id="diff-${i}" style="text-align:right; font-size:0.85rem;">-</td>
         `;
         tbody.appendChild(row);
+
+        // RIGA TABELLA IMPATTO ASSISTENZA
+        const rowImp = document.createElement('tr');
+        rowImp.innerHTML = `
+            <td style="font-weight:bold; font-size:0.8rem">${mese}</td>
+            <td id="imp-perc-${i}">-</td>
+            <td id="imp-val-${i}" style="text-align:right;" class="info-assistenza">-</td>
+        `;
+        tbodyImpatto.appendChild(rowImp);
 
         const opt = document.createElement('option');
         opt.value = i; opt.innerText = mese;
@@ -249,7 +274,19 @@
             const totaleMeseCorrente = v + a;
             arrayTotaliMensili.push(totaleMeseCorrente);
             
-            document.getElementById(`tot-mese-${i}`).innerText = totaleMeseCorrente > 0 ? totaleMeseCorrente.toLocaleString('it-IT') + " €" : "0 €";
+            document.getElementById(`tot-mese-${i}`).innerText = totaleMeseCorrente > 0 ? totaleMeseCorrente.toLocaleString('it-IT', {minimumFractionDigits: 2}) + " €" : "0 €";
+
+            // Calcolo e visualizzazione impatto assistenza
+            const cellPerc = document.getElementById(`imp-perc-${i}`);
+            const cellVal = document.getElementById(`imp-val-${i}`);
+            if (a > 0) {
+                const incidenza = ((a / totaleMeseCorrente) * 100).toFixed(1);
+                cellPerc.innerHTML = `L'assistenza genera il <b>${incidenza}%</b> del mese`;
+                cellVal.innerText = `+ ${a.toLocaleString('it-IT', {style: 'currency', currency: 'EUR'})}`;
+            } else {
+                cellPerc.innerText = "Nessuna assistenza registrata";
+                cellVal.innerText = "-";
+            }
 
             if (totaleMeseCorrente > 0 && p > 0) {
                 const varPerc = ((totaleMeseCorrente - p) / p * 100).toFixed(1);
@@ -320,14 +357,12 @@
         cambiaAnno();
     }
 
-    // FUNZIONE DI EMERGENZA INTERNA: SBLOCCA E RECUPERA TUTTO AUTOMATICAMENTE
     function recuperoForzatoInterno() {
         let convertiti = 0;
-        let annoCorrente = selettoreAnno.value; // Es. 2026
-        let annoPrecedente = annoCorrente - 1;  // Es. 2025
+        let annoCorrente = selettoreAnno.value;
+        let annoPrecedente = annoCorrente - 1;
 
         for(let i=0; i<12; i++) {
-            // Cerca in tutte le vecchie combinazioni usate nei codici precedenti
             let vecchioValCorrente = localStorage.getItem('c_'+i) || localStorage.getItem('mese_'+i) || localStorage.getItem(`db_${annoCorrente}_m_${i}`);
             let vecchioValPassato = localStorage.getItem('p_'+i) || localStorage.getItem('fatturato_mese_'+i) || localStorage.getItem(`db_${annoPrecedente}_m_${i}`);
 
@@ -347,11 +382,10 @@
             alert(`✓ Operazione riuscita! Abbiamo recuperato e sistemato i dati nascosti nel browser. Ora la pagina verrà ricaricata.`);
             cambiaAnno();
         } else {
-            alert("Non abbiamo trovato dati nel browser da convertire. Se stai usando un telefono nuovo o un browser pulito, usa il tasto 'Importa File' selezionando il file .json scaricato all'inizio dal PC.");
+            alert("Non abbiamo trovato dati nel browser da convertire.");
         }
     }
 
-    // INTERFACCIA BACKUP COMPLETA
     function ottieniOggettoDati() {
         let tuttoIlDB = {};
         for (let i = 0; i < localStorage.length; i++) {
