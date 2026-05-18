@@ -12,14 +12,16 @@
         .grid { display: grid; grid-template-columns: 1.35fr 0.65fr; gap: 20px; }
         .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
-        .header-tools { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        /* Header modificato per includere il Totale Annuale */
+        .header-tools { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 15px; }
+        .header-title-zone { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .totale-header { font-size: 1.4rem; font-weight: 800; color: var(--success); background: #f0fdf4; padding: 6px 15px; border-radius: 8px; border: 1px solid #bbf7d0; }
         .select-anno { padding: 10px 20px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; border: 2px solid var(--primary); color: var(--primary); background: white; cursor: pointer; }
 
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; font-size: 0.75rem; color: #64748b; padding: 10px 5px; border-bottom: 1px solid #e2e8f0; }
         td { padding: 6px 4px; border-bottom: 1px solid #f1f5f9; }
         
-        /* Allargamento colonna totale e stile input */
         .col-totale { width: 140px; min-width: 140px; background: #f1f5f9; font-weight: bold; font-size: 0.95rem; text-align: center; }
         input, select { width: 95%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem; box-sizing: border-box; }
         input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
@@ -57,16 +59,19 @@
         #msg, #msg-cassa { text-align: center; color: var(--success); height: 20px; font-weight: bold; font-size: 0.9rem; margin-top: 5px; }
         
         .btn-reset { display: block; margin: 20px auto 0; background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.8rem; text-decoration: underline; }
-        @media (max-width: 950px) { .grid { grid-template-columns: 1fr; } }
+        @media (max-width: 950px) { .header-tools { flex-direction: column; align-items: flex-start; } .grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
 <div class="container">
     
-    <!-- BARRA DI CONTROLLO ANNO -->
+    <!-- BARRA DI CONTROLLO ANNO CON TOTALE IN ALTO -->
     <div class="header-tools">
-        <h2 style="margin: 0; font-size: 1.3rem;">Dashboard Fatturato Avanzata</h2>
+        <div class="header-title-zone">
+            <h2 style="margin: 0; font-size: 1.3rem;">Dashboard Fatturato</h2>
+            <div id="totaleHeader" class="totale-header">0,00 €</div>
+        </div>
         <div>
             <label style="font-size: 0.85rem; font-weight: bold; color: #64748b; margin-right: 10px;">Anno di Lavoro:</label>
             <select id="selettoreAnno" class="select-anno" onchange="cambiaAnno()"></select>
@@ -118,7 +123,7 @@
             <button class="btn btn-save" onclick="salvaTutto()">💾 SALVA DATI ANNO IN CORSO</button>
             <div id="msg"></div>
 
-            <!-- NUOVA SEZIONE DI IMPATTO ASSISTENZA -->
+            <!-- SEZIONE DI IMPATTO ASSISTENZA -->
             <h3 style="margin-top: 30px; border-top: 2px solid #e2e8f0; padding-top: 15px;">📊 Dettaglio e Impatto Assistenza</h3>
             <table>
                 <thead>
@@ -194,7 +199,6 @@
     const meseCorrenteReale = new Date().getMonth();
 
     mesiNomi.forEach((mese, i) => {
-        // RIGA TABELLA PRINCIPALE
         const row = document.createElement('tr');
         row.innerHTML = `
             <td style="font-weight:bold; font-size:0.8rem">${mese}</td>
@@ -206,7 +210,6 @@
         `;
         tbody.appendChild(row);
 
-        // RIGA TABELLA IMPATTO ASSISTENZA
         const rowImp = document.createElement('tr');
         rowImp.innerHTML = `
             <td style="font-weight:bold; font-size:0.8rem">${mese}</td>
@@ -276,7 +279,6 @@
             
             document.getElementById(`tot-mese-${i}`).innerText = totaleMeseCorrente > 0 ? totaleMeseCorrente.toLocaleString('it-IT', {minimumFractionDigits: 2}) + " €" : "0 €";
 
-            // Calcolo e visualizzazione impatto assistenza
             const cellPerc = document.getElementById(`imp-perc-${i}`);
             const cellVal = document.getElementById(`imp-val-${i}`);
             if (a > 0) {
@@ -301,6 +303,9 @@
             }
             totaleAnnoPrecedente += p;
         }
+
+        // AGGIORNA IL TOTALE GENERALE NELL'HEADER IN ALTO
+        document.getElementById('totaleHeader').innerText = totaleAnnoCorrente.toLocaleString('it-IT', {style: 'currency', currency: 'EUR'});
 
         const proiezioneC = mesiCompilati > 0 ? (totaleAnnoCorrente / mesiCompilati) * 12 : 0;
         const crescitaGen = totaleAnnoPrecedente > 0 ? ((proiezioneC - totaleAnnoPrecedente) / totaleAnnoPrecedente * 100).toFixed(1) : 0;
