@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Business Dashboard Pro - Analisi YoY</title>
+    <title>Business Dashboard Pro + Cassa</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #2563eb; --secondary: #94a3b8; --success: #059669; --danger: #ef4444; --bg: #f8fafc; }
@@ -16,33 +16,57 @@
         th { text-align: left; font-size: 0.75rem; color: #64748b; padding: 10px 5px; border-bottom: 1px solid #e2e8f0; }
         td { padding: 8px 5px; border-bottom: 1px solid #f1f5f9; }
         
-        input { width: 85%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; }
-        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
+        input, select { width: 85%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; }
+        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
         
+        .btn { color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; transition: background 0.2s; }
+        .btn-save { background: var(--primary); margin-top: 15px; }
+        .btn-save:hover { background: #1d4ed8; }
+        .btn-add { background: var(--success); width: auto; padding: 8px 20px; }
+        .btn-add:hover { background: #047857; }
+        
+        .quick-cash { display: flex; gap: 10px; align-items: flex-end; margin-top: 10px; }
+        .quick-cash div { display: flex; flex-direction: column; gap: 4px; }
+
         .diff-pos { color: var(--success); font-weight: bold; font-size: 0.85rem; }
         .diff-neg { color: var(--danger); font-weight: bold; font-size: 0.85rem; }
         .diff-null { color: #94a3b8; font-size: 0.85rem; }
 
-        .btn-save { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; margin-top: 15px; }
-        .btn-save:hover { background: #1d4ed8; }
-        
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
         .stat-box { background: #f1f5f9; padding: 15px; border-radius: 10px; text-align: center; }
         .stat-label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px; }
         .stat-value { font-size: 1.2rem; font-weight: bold; }
 
-        #msg { text-align: center; color: var(--success); height: 20px; margin-top: 10px; font-weight: bold; font-size: 0.9rem; }
+        #msg, #msg-cassa { text-align: center; color: var(--success); height: 20px; font-weight: bold; font-size: 0.9rem; margin-top: 5px; }
         
+        .btn-reset { display: block; margin: 20px auto 0; background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.8rem; text-decoration: underline; }
         @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="text-align: center; margin-bottom: 30px;">Analisi Performance Mensile YoY</h2>
+    <h2 style="text-align: center; margin-bottom: 30px;">Analisi Performance Mensile & Cassa</h2>
     
+    <!-- NUOVA SEZIONE: REGISTRA VENDITA AL VOLO -->
+    <div class="card">
+        <h3>➕ Registra Nuova Vendita</h3>
+        <div class="quick-cash">
+            <div style="flex: 2;">
+                <label style="font-size: 0.8rem; font-weight: bold; color: #64748b;">Importo Vendita (€)</label>
+                <input type="number" id="importoVendita" placeholder="Es. 1500" step="any">
+            </div>
+            <div style="flex: 1;">
+                <label style="font-size: 0.8rem; font-weight: bold; color: #64748b;">Mese destinazione</label>
+                <select id="meseSelezione"></select>
+            </div>
+            <button class="btn btn-add" onclick="aggiungiVendita()">Aggiungi al Mese</button>
+        </div>
+        <div id="msg-cassa"></div>
+    </div>
+
     <div class="grid">
-        <!-- SEZIONE INPUT E ANALISI MENSILE -->
+        <!-- SEZIONE TABELLA -->
         <div class="card">
             <h3>Dati Mensili e Variazione %</h3>
             <table>
@@ -56,7 +80,7 @@
                 </thead>
                 <tbody id="tabellaMesi"></tbody>
             </table>
-            <button class="btn-save" onclick="salvaTutto()">💾 SALVA E SINCRONIZZA</button>
+            <button class="btn btn-save" onclick="salvaTutto()">💾 SALVA TUTTO NEL BROWSER</button>
             <div id="msg"></div>
         </div>
 
@@ -79,32 +103,72 @@
                         <span id="crescita" class="stat-value">0%</span>
                     </div>
                 </div>
-                <div id="analisiTarget" style="margin-top:20px; padding:15px; background:#fff8eb; border-radius:8px; font-size:0.9rem; border-left:4px solid #f59e0b;">
-                    Inserisci i dati per calcolare il target verso 1M.
-                </div>
+                <div id="analisiTarget" style="margin-top:20px; padding:15px; background:#fff8eb; border-radius:8px; font-size:0.9rem; border-left:4px solid #f59e0b;"></div>
             </div>
         </div>
     </div>
+    <button class="btn-reset" onclick="resetDati()">Azzera tutto per il nuovo anno</button>
 </div>
 
 <script>
     const mesiNomi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
     let chart;
 
+    // Inizializzazione Tabella e Menu a tendina
     const tbody = document.getElementById('tabellaMesi');
+    const selectMese = document.getElementById('meseSelezione');
+    const meseCorrenteReale = new Date().getMonth(); // Rileva il mese attuale del PC/Telefono (0 = Gennaio)
+
     mesiNomi.forEach((mese, i) => {
+        // Tabella
         const row = document.createElement('tr');
         const valC = localStorage.getItem('c_'+i) || '';
         const valP = localStorage.getItem('p_'+i) || '';
         
         row.innerHTML = `
             <td style="font-weight:bold; font-size:0.85rem">${mese}</td>
-            <td><input type="number" class="in-c" data-i="${i}" value="${valC}" oninput="aggiornaTutto()"></td>
-            <td><input type="number" class="in-p" data-i="${i}" value="${valP}" oninput="aggiornaTutto()"></td>
+            <td><input type="number" class="in-c" id="input-c-${i}" data-i="${i}" value="${valC}" oninput="aggiornaTutto()"></td>
+            <td><input type="number" class="in-p" id="input-p-${i}" data-i="${i}" value="${valP}" oninput="aggiornaTutto()"></td>
             <td id="diff-${i}" style="text-align:right">-</td>
         `;
         tbody.appendChild(row);
+
+        // Opzioni Menu Select
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.innerText = mese;
+        if(i === meseCorrenteReale) opt.selected = true; // Seleziona automaticamente il mese corrente
+        selectMese.appendChild(opt);
     });
+
+    // FUNZIONE PER SOMMARE UNA VENDITA AL VOLO
+    function aggiungiVendita() {
+        const importoInput = document.getElementById('importoVendita');
+        const valoreVendita = parseFloat(importoInput.value);
+        const meseSelezionato = document.getElementById('meseSelezione').value;
+        const msgCassa = document.getElementById('msg-cassa');
+
+        if (isNaN(valoreVendita) || valoreVendita <= 0) {
+            alert("Inserisci un importo valido superiore a 0.");
+            return;
+        }
+
+        const inputMeseCorrente = document.getElementById(`input-c-${meseSelezionato}`);
+        const vecchioValore = parseFloat(inputMeseCorrente.value) || 0;
+        
+        // Fai la somma aritmetica
+        const nuovoValore = vecchioValore + valoreVendita;
+        inputMeseCorrente.value = nuovoValore.toFixed(2);
+
+        // Notifica visiva di successo
+        msgCassa.innerText = `€ ${valoreVendita.toLocaleString('it-IT')} aggiunti con successo a ${mesiNomi[meseSelezionato]}!`;
+        importoInput.value = ""; // Svuota il campo dell'importo per la prossima vendita
+        
+        setTimeout(() => { msgCassa.innerText = ""; }, 3000);
+
+        // Salva in automatico per sicurezza e aggiorna la schermata
+        salvaTutto();
+    }
 
     function aggiornaTutto() {
         const datiC = Array.from(document.querySelectorAll('.in-c')).map(i => parseFloat(i.value) || 0);
@@ -116,16 +180,11 @@
             const p = datiP[i];
             const diffCell = document.getElementById(`diff-${i}`);
             
-            // Calcolo Differenza Mensile
             if (v > 0 && p > 0) {
                 const varPerc = ((v - p) / p * 100).toFixed(1);
-                if (varPerc > 0) {
-                    diffCell.innerHTML = `<span class="diff-pos">↑ ${varPerc}%</span>`;
-                } else if (varPerc < 0) {
-                    diffCell.innerHTML = `<span class="diff-neg">↓ ${Math.abs(varPerc)}%</span>`;
-                } else {
-                    diffCell.innerHTML = `<span class="diff-null">0%</span>`;
-                }
+                if (varPerc > 0) diffCell.innerHTML = `<span class="diff-pos">↑ ${varPerc}%</span>`;
+                else if (varPerc < 0) diffCell.innerHTML = `<span class="diff-neg">↓ ${Math.abs(varPerc)}%</span>`;
+                else diffCell.innerHTML = `<span class="diff-null">0%</span>`;
             } else {
                 diffCell.innerText = "-";
             }
@@ -134,7 +193,6 @@
             totaleP += p;
         });
 
-        // Proiezione e Target
         const proiezioneC = mesiC > 0 ? (totaleC / mesiC) * 12 : 0;
         const crescitaGen = totaleP > 0 ? ((proiezioneC - totaleP) / totaleP * 100).toFixed(1) : 0;
 
@@ -142,7 +200,6 @@
         document.getElementById('crescita').innerText = (crescitaGen > 0 ? "+" : "") + crescitaGen + "%";
         document.getElementById('crescita').style.color = crescitaGen >= 0 ? "var(--success)" : "var(--danger)";
 
-        // Target 1M
         const analisi = document.getElementById('analisiTarget');
         if (proiezioneC < 1000000) {
             const residuo = (1000000 - totaleC) / (12 - mesiC);
@@ -162,8 +219,8 @@
             data: {
                 labels: mesiNomi.map(m => m.substr(0,3)),
                 datasets: [
-                    { label: '2026', data: corrente.map(v => v || null), borderColor: '#2563eb', tension: 0.3, fill: false, borderWidth: 3 },
-                    { label: '2025', data: passato, borderColor: '#cbd5e1', tension: 0.3, fill: false, borderDash: [5,5] }
+                    { label: 'Anno Corrente', data: corrente.map(v => v || null), borderColor: '#2563eb', tension: 0.3, fill: false, borderWidth: 3 },
+                    { label: 'Anno Precedente', data: passato, borderColor: '#cbd5e1', tension: 0.3, fill: false, borderDash: [5,5] }
                 ]
             },
             options: { plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true } } }
@@ -174,8 +231,13 @@
         document.querySelectorAll('.in-c').forEach((el, i) => localStorage.setItem('c_'+i, el.value));
         document.querySelectorAll('.in-p').forEach((el, i) => localStorage.setItem('p_'+i, el.value));
         const msg = document.getElementById('msg');
-        msg.innerText = "✓ Tutti i dati sono stati salvati!";
-        setTimeout(() => msg.innerText = "", 3000);
+        msg.innerText = "✓ Dati salvati e grafici sincronizzati!";
+        setTimeout(() => { msg.innerText = ""; }, 3000);
+        aggiornaTutto();
+    }
+
+    function resetDati() {
+        if(confirm("Vuoi cancellare tutto?")) { localStorage.clear(); location.reload(); }
     }
 
     window.onload = aggiornaTutto;
