@@ -12,7 +12,6 @@
         .grid { display: grid; grid-template-columns: 1.35fr 0.65fr; gap: 20px; }
         .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
-        /* Header modificato per includere il Totale Annuale */
         .header-tools { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 15px; }
         .header-title-zone { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
         .totale-header { font-size: 1.4rem; font-weight: 800; color: var(--success); background: #f0fdf4; padding: 6px 15px; border-radius: 8px; border: 1px solid #bbf7d0; }
@@ -40,12 +39,6 @@
         .btn-text-backup { background: #0284c7; }
         .btn-text-backup:hover { background: #0369a1; }
         
-        .btn-emergency { background: #dc2626; color: white; width: 100%; padding: 10px; border-radius: 6px; font-weight: bold; border: none; cursor: pointer; margin-top: 15px; font-size: 0.85rem; }
-        .btn-emergency:hover { background: #b91c1c; }
-
-        .quick-cash { display: flex; gap: 10px; align-items: flex-end; margin-top: 10px; flex-wrap: wrap; }
-        .quick-cash div { display: flex; flex-direction: column; gap: 4px; }
-
         .diff-pos { color: var(--success); font-weight: bold; font-size: 0.85rem; }
         .diff-neg { color: var(--danger); font-weight: bold; font-size: 0.85rem; }
         .diff-null { color: #94a3b8; font-size: 0.85rem; }
@@ -120,7 +113,7 @@
                 <tbody id="tabellaMesi"></tbody>
             </table>
             
-            <button class="btn btn-save" onclick="salvaTutto()">💾 SALVA DATI ANNO IN CORSO</button>
+            <button class="btn btn-save" onclick="salvaTutto()">💾 SALVA E CONFERMA MODIFICHE</button>
             <div id="msg"></div>
 
             <!-- SEZIONE DI IMPATTO ASSISTENZA -->
@@ -136,18 +129,14 @@
                 <tbody id="tabellaImpatto"></tbody>
             </table>
 
-            <button class="btn-emergency" onclick="recuperoForzatoInterno()">🔄 SBLOCCA E CONVERTI VECCHI DATI SPARIATI</button>
-
-            <div class="backup-title">Metodo 1: Backup tramite file (.json)</div>
+            <div class="backup-title">Sincronizzazione e Backup Manuale</div>
             <div class="backup-zone">
-                <button class="btn-backup" onclick="esportaBackup()">📥 Esporta File</button>
+                <button class="btn-backup" onclick="esportaBackup()">📥 Esporta File (.json)</button>
                 <label class="btn-backup">
-                    📤 Importa File
+                    📤 Importa File (.json)
                     <input type="file" id="importFile" accept=".json" onchange="importaBackup(this)" style="display:none;">
                 </label>
             </div>
-
-            <div class="backup-title">Metodo 2: Sincronizzazione rapida Copia/Incolla</div>
             <div class="backup-zone">
                 <button class="btn-backup btn-text-backup" onclick="copiaTestoBackup()">📋 Copia Dati (Testo)</button>
                 <button class="btn-backup btn-text-backup" onclick="incollaTestoBackup()">📥 Incolla Dati (Testo)</button>
@@ -183,6 +172,36 @@
 <script>
     const mesiNomi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
     let chart;
+
+    // IL TUO DATABASE HARDCODED DI SICUREZZA
+    const datiInizialiHardcoded = {
+        // DATI REALI 2025
+        "db_2025_v_0": "36213", "db_2025_tot_0": "36213",
+        "db_2025_v_1": "20194", "db_2025_tot_1": "20194",
+        "db_2025_v_2": "39334", "db_2025_tot_2": "39334",
+        "db_2025_v_3": "56630", "db_2025_tot_3": "56630",
+        "db_2025_v_4": "78993", "db_2025_tot_4": "78993",
+        "db_2025_v_5": "58218", "db_2025_tot_5": "58218",
+        "db_2025_v_6": "80569", "db_2025_tot_6": "80569",
+        "db_2025_v_7": "46520.2", "db_2025_tot_7": "46520.2",
+        "db_2025_v_8": "30600.3", "db_2025_tot_8": "30600.3",
+        "db_2025_v_9": "42520.2", "db_2025_tot_9": "42520.2",
+        "db_2025_v_10": "34396", "db_2025_tot_10": "34396",
+        "db_2025_v_11": "11042", "db_2025_tot_11": "11042",
+        // DATI REALI 2026
+        "db_2026_v_0": "98087", "db_2026_tot_0": "98087",
+        "db_2026_v_1": "80434.8", "db_2026_tot_1": "80434.8",
+        "db_2026_v_2": "51475.16", "db_2026_tot_2": "51475.16",
+        "db_2026_v_3": "67098", "db_2026_tot_3": "67098",
+        "db_2026_v_4": "46173", "db_2026_tot_4": "46173"
+    };
+
+    // Inizializza il localStorage se vuoto per evitare l'effetto tabula rasa
+    Object.keys(datiInizialiHardcoded).forEach(chiave => {
+        if (!localStorage.getItem(chiave)) {
+            localStorage.setItem(chiave, datiInizialiHardcoded[chiave]);
+        }
+    });
     
     const selettoreAnno = document.getElementById('selettoreAnno');
     const annoAttualeReale = new Date().getFullYear();
@@ -304,7 +323,6 @@
             totaleAnnoPrecedente += p;
         }
 
-        // AGGIORNA IL TOTALE GENERALE NELL'HEADER IN ALTO
         document.getElementById('totaleHeader').innerText = totaleAnnoCorrente.toLocaleString('it-IT', {style: 'currency', currency: 'EUR'});
 
         const proiezioneC = mesiCompilati > 0 ? (totaleAnnoCorrente / mesiCompilati) * 12 : 0;
@@ -357,57 +375,18 @@
         }
 
         const msg = document.getElementById('msg');
-        msg.innerText = "✓ Dati di Vendite e Assistenza salvati!";
+        msg.innerText = "✓ Dati salvati con successo nel browser!";
         setTimeout(() => { msg.innerText = ""; }, 3000);
         cambiaAnno();
-    }
-
-    function recuperoForzatoInterno() {
-        let convertiti = 0;
-        let annoCorrente = selettoreAnno.value;
-        let annoPrecedente = annoCorrente - 1;
-
-        for(let i=0; i<12; i++) {
-            let vecchioValCorrente = localStorage.getItem('c_'+i) || localStorage.getItem('mese_'+i) || localStorage.getItem(`db_${annoCorrente}_m_${i}`);
-            let vecchioValPassato = localStorage.getItem('p_'+i) || localStorage.getItem('fatturato_mese_'+i) || localStorage.getItem(`db_${annoPrecedente}_m_${i}`);
-
-            if(vecchioValCorrente) {
-                localStorage.setItem(`db_${annoCorrente}_v_${i}`, vecchioValCorrente);
-                localStorage.setItem(`db_${annoCorrente}_tot_${i}`, vecchioValCorrente);
-                convertiti++;
-            }
-            if(vecchioValPassato) {
-                localStorage.setItem(`db_${annoPrecedente}_v_${i}`, vecchioValPassato);
-                localStorage.setItem(`db_${annoPrecedente}_tot_${i}`, vecchioValPassato);
-                convertiti++;
-            }
-        }
-
-        if(convertiti > 0) {
-            alert(`✓ Operazione riuscita! Abbiamo recuperato e sistemato i dati nascosti nel browser. Ora la pagina verrà ricaricata.`);
-            cambiaAnno();
-        } else {
-            alert("Non abbiamo trovato dati nel browser da convertire.");
-        }
     }
 
     function ottieniOggettoDati() {
         let tuttoIlDB = {};
         for (let i = 0; i < localStorage.length; i++) {
             let chiave = localStorage.key(i);
-            if(chiave.startsWith("db_") || chiave.startsWith("c_") || chiave.startsWith("p_") || chiave.startsWith("mese_")) tuttoIlDB[chiave] = localStorage.getItem(chiave);
+            if(chiave.startsWith("db_")) tuttoIlDB[chiave] = localStorage.getItem(chiave);
         }
         return tuttoIlDB;
-    }
-
-    function applicaOggettoDati(dati) {
-        if(dati && typeof dati === 'object') {
-            Object.keys(dati).forEach(chiave => {
-                localStorage.setItem(chiave, dati[chiave]);
-            });
-            return true;
-        }
-        return false;
     }
 
     function esportaBackup() {
@@ -415,7 +394,7 @@
         const blob = new Blob([JSON.stringify(dati)], { type: "application/json" });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `backup_aziendale_completo.json`;
+        a.download = `backup_aggiornato_fatturato.json`;
         a.click();
     }
 
@@ -424,11 +403,13 @@
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
-                if (applicaOggettoDati(JSON.parse(e.target.result))) {
-                    alert("✓ File caricato! Ora premi il tasto rosso di sblocco per convertirlo.");
-                    recuperoForzatoInterno();
-                } else { alert("File non valido."); }
-            } catch (err) { alert("Errore nel file."); }
+                const dati = JSON.parse(e.target.result);
+                Object.keys(dati).forEach(chiave => {
+                    if(chiave.startsWith("db_")) localStorage.setItem(chiave, dati[chiave]);
+                });
+                alert("✓ Backup importato con successo!");
+                cambiaAnno();
+            } catch (err) { alert("File non valido."); }
         };
         reader.readAsText(file);
     }
@@ -444,15 +425,17 @@
         const codiceInput = prompt("Incolla qui il codice di backup:");
         if (!codiceInput) return;
         try {
-            if (applicaOggettoDati(JSON.parse(atob(codiceInput.trim())))) {
-                alert("✓ Codice inserito! Ora premi il tasto rosso di sblocco per fare la conversione.");
-                recuperoForzatoInterno();
-            } else { alert("Codice non valido."); }
+            const dati = JSON.parse(atob(codiceInput.trim()));
+            Object.keys(dati).forEach(chiave => {
+                if(chiave.startsWith("db_")) localStorage.setItem(chiave, dati[chiave]);
+            });
+            alert("✓ Sincronizzazione completata!");
+            cambiaAnno();
         } catch (err) { alert("Errore nella lettura del codice."); }
     }
 
     function resetDati() {
-        if(confirm("Attenzione! Questo cancellerà TUTTI i dati inseriti per tutti gli anni.")) { localStorage.clear(); location.reload(); }
+        if(confirm("Vuoi azzerare la memoria? I dati fissi hardcoded rimarranno comunque al riavvio.")) { localStorage.clear(); location.reload(); }
     }
 
     window.onload = cambiaAnno;
