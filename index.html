@@ -1,444 +1,221 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Year Business Dashboard + Assistenza Avanzata</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root { --primary: #2563eb; --secondary: #94a3b8; --success: #059669; --danger: #ef4444; --bg: #f8fafc; --info: #0284c7; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1e293b; }
-        .container { max-width: 1250px; margin: auto; }
-        .grid { display: grid; grid-template-columns: 1.35fr 0.65fr; gap: 20px; }
-        .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        
-        .header-tools { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 15px; }
-        .header-title-zone { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
-        .totale-header { font-size: 1.4rem; font-weight: 800; color: var(--success); background: #f0fdf4; padding: 6px 15px; border-radius: 8px; border: 1px solid #bbf7d0; }
-        .select-anno { padding: 10px 20px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; border: 2px solid var(--primary); color: var(--primary); background: white; cursor: pointer; }
-
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; font-size: 0.75rem; color: #64748b; padding: 10px 5px; border-bottom: 1px solid #e2e8f0; }
-        td { padding: 6px 4px; border-bottom: 1px solid #f1f5f9; }
-        
-        .col-totale { width: 140px; min-width: 140px; background: #f1f5f9; font-weight: bold; font-size: 0.95rem; text-align: center; }
-        input, select { width: 95%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem; box-sizing: border-box; }
-        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
-        input[disabled] { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
-        
-        .btn { color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; transition: background 0.2s; }
-        .btn-save { background: var(--primary); margin-top: 15px; }
-        .btn-save:hover { background: #1d4ed8; }
-        .btn-add { background: var(--success); width: auto; padding: 8px 20px; }
-        .btn-add:hover { background: #047857; }
-        
-        .backup-title { font-size: 0.85rem; font-weight: bold; color: #64748b; margin-top: 20px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px;}
-        .backup-zone { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        .btn-backup { background: #475569; font-size: 0.8rem; padding: 10px; text-align: center; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; }
-        .btn-backup:hover { background: #334155; }
-        .btn-text-backup { background: #0284c7; }
-        .btn-text-backup:hover { background: #0369a1; }
-        
-        .diff-pos { color: var(--success); font-weight: bold; font-size: 0.85rem; }
-        .diff-neg { color: var(--danger); font-weight: bold; font-size: 0.85rem; }
-        .diff-null { color: #94a3b8; font-size: 0.85rem; }
-        .info-assistenza { color: var(--info); font-weight: 600; font-size: 0.85rem; }
-
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-        .stat-box { background: #f1f5f9; padding: 15px; border-radius: 10px; text-align: center; }
-        .stat-label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 5px; }
-        .stat-value { font-size: 1.2rem; font-weight: bold; }
-
-        #msg, #msg-cassa { text-align: center; color: var(--success); height: 20px; font-weight: bold; font-size: 0.9rem; margin-top: 5px; }
-        
-        .btn-reset { display: block; margin: 20px auto 0; background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.8rem; text-decoration: underline; }
-        @media (max-width: 950px) { .header-tools { flex-direction: column; align-items: flex-start; } .grid { grid-template-columns: 1fr; } }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulatore Spese</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Web app statica per GitHub Pages</p>
+        <h1>Simulatore Spese</h1>
+        <p class="subtitle">Inserisci il saldo attuale, le spese certe e le simulazioni future per vedere il saldo residuo in tempo reale.</p>
+      </div>
+      <div class="topbar-actions">
+        <button id="exportBtn" class="btn btn-secondary">Esporta dati</button>
+        <label class="btn btn-secondary file-label">
+          Importa dati
+          <input id="importFile" type="file" accept="application/json" hidden />
+        </label>
+        <button id="resetBtn" class="btn btn-danger">Reset</button>
+      </div>
+    </header>
 
-<div class="container">
-    
-    <!-- BARRA DI CONTROLLO ANNO CON TOTALE IN ALTO -->
-    <div class="header-tools">
-        <div class="header-title-zone">
-            <h2 style="margin: 0; font-size: 1.3rem;">Dashboard Fatturato</h2>
-            <div id="totaleHeader" class="totale-header">0,00 €</div>
+    <main class="dashboard">
+      <section class="card card-highlight">
+        <div class="card-header">
+          <h2>Dati iniziali</h2>
+          <span class="chip">Salvataggio automatico</span>
         </div>
-        <div>
-            <label style="font-size: 0.85rem; font-weight: bold; color: #64748b; margin-right: 10px;">Anno di Lavoro:</label>
-            <select id="selettoreAnno" class="select-anno" onchange="cambiaAnno()"></select>
+        <div class="grid-2">
+          <div class="field">
+            <label for="currentBalance">Saldo attuale (€)</label>
+            <input id="currentBalance" type="number" step="0.01" min="0" placeholder="Es. 12500" />
+          </div>
+          <div class="field">
+            <label for="safetyThreshold">Soglia minima di sicurezza (€)</label>
+            <input id="safetyThreshold" type="number" step="0.01" min="0" placeholder="Es. 2000" />
+          </div>
         </div>
-    </div>
-    
-    <!-- REGISTRA VENDITA AL VOLO -->
-    <div class="card">
-        <h3>➕ Registra Incasso Rapido</h3>
-        <div class="quick-cash">
-            <div style="flex: 1.5; min-width: 150px;">
-                <label style="font-size: 0.8rem; font-weight: bold; color: #64748b;">Importo (€)</label>
-                <input type="number" id="importoVendita" placeholder="Es. 500" step="any">
+      </section>
+
+      <section class="stats-grid">
+        <article class="stat-card">
+          <span class="stat-label">Totale spese certe</span>
+          <strong id="certainTotal" class="stat-value">€ 0,00</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Totale simulazioni future</span>
+          <strong id="futureTotal" class="stat-value">€ 0,00</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Saldo finale simulato</span>
+          <strong id="finalBalance" class="stat-value">€ 0,00</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Margine sopra soglia</span>
+          <strong id="marginValue" class="stat-value">€ 0,00</strong>
+        </article>
+      </section>
+
+      <section class="card summary-card">
+        <div class="summary-header">
+          <div>
+            <h2>Indicatore situazione</h2>
+            <p id="statusText" class="status-text">Inserisci i dati per vedere la situazione.</p>
+          </div>
+          <div id="statusBadge" class="status-badge neutral">In attesa dati</div>
+        </div>
+        <div class="bar-row">
+          <div>
+            <span>Saldo iniziale</span>
+            <strong id="barInitialLabel">€ 0,00</strong>
+          </div>
+          <div class="progress-track">
+            <div id="initialBar" class="progress-bar progress-blue" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="bar-row">
+          <div>
+            <span>Spese totali</span>
+            <strong id="barExpensesLabel">€ 0,00</strong>
+          </div>
+          <div class="progress-track">
+            <div id="expensesBar" class="progress-bar progress-orange" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="bar-row">
+          <div>
+            <span>Saldo residuo</span>
+            <strong id="barFinalLabel">€ 0,00</strong>
+          </div>
+          <div class="progress-track">
+            <div id="finalBar" class="progress-bar progress-green" style="width:0%"></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="columns">
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2>Spese certe</h2>
+              <p class="section-text">Spese già previste o ricorrenti.</p>
             </div>
-            <div style="flex: 1.5; min-width: 150px;">
-                <label style="font-size: 0.8rem; font-weight: bold; color: #64748b;">Tipo Entrata</label>
-                <select id="tipoEntrata">
-                    <option value="vendite">Vendite Standard / Prodotti</option>
-                    <option value="assistenza">Assistenza / Servizi</option>
+            <button id="addCertainExpense" class="btn btn-primary">+ Aggiungi spesa certa</button>
+          </div>
+
+          <form id="certainForm" class="entry-form hidden">
+            <div class="grid-2">
+              <div class="field">
+                <label for="certainDescription">Descrizione</label>
+                <input id="certainDescription" type="text" placeholder="Es. Mutuo" required />
+              </div>
+              <div class="field">
+                <label for="certainAmount">Importo (€)</label>
+                <input id="certainAmount" type="number" step="0.01" min="0" placeholder="Es. 850" required />
+              </div>
+              <div class="field">
+                <label for="certainFrequency">Frequenza</label>
+                <select id="certainFrequency">
+                  <option value="Una tantum">Una tantum</option>
+                  <option value="Mensile">Mensile</option>
+                  <option value="Trimestrale">Trimestrale</option>
+                  <option value="Annuale">Annuale</option>
                 </select>
+              </div>
+              <div class="field">
+                <label for="certainDate">Data prevista</label>
+                <input id="certainDate" type="date" />
+              </div>
             </div>
-            <div style="flex: 1; min-width: 120px;">
-                <label style="font-size: 0.8rem; font-weight: bold; color: #64748b;">Mese</label>
-                <select id="meseSelezione"></select>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Salva spesa certa</button>
+              <button type="button" id="cancelCertainBtn" class="btn btn-secondary">Annulla</button>
             </div>
-            <button class="btn btn-add" onclick="aggiungiVendita()">Aggiungi Incasso</button>
-        </div>
-        <div id="msg-cassa"></div>
-    </div>
+          </form>
 
-    <div class="grid">
-        <!-- SEZIONE TABELLA -->
-        <div class="card" style="overflow-x: auto;">
-            <h3>Dati Mensili Disaggregati</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>MESE</th>
-                        <th>VENDITE (€)</th>
-                        <th>ASSISTENZA (€)</th>
-                        <th class="col-totale">TOTALE (€)</th>
-                        <th>PREC. (€)</th>
-                        <th style="text-align:right">VAR. %</th>
-                    </tr>
-                </thead>
-                <tbody id="tabellaMesi"></tbody>
-            </table>
-            
-            <button class="btn btn-save" onclick="salvaTutto()">💾 SALVA E CONFERMA MODIFICHE</button>
-            <div id="msg"></div>
+          <div id="certainList" class="list"></div>
+        </section>
 
-            <!-- SEZIONE DI IMPATTO ASSISTENZA -->
-            <h3 style="margin-top: 30px; border-top: 2px solid #e2e8f0; padding-top: 15px;">📊 Dettaglio e Impatto Assistenza</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 25%;">Mese</th>
-                        <th style="width: 45%;">Impatto dell'Assistenza sul mese</th>
-                        <th style="width: 30%; text-align: right;">Differenza Generata</th>
-                    </tr>
-                </thead>
-                <tbody id="tabellaImpatto"></tbody>
-            </table>
-
-            <div class="backup-title">Sincronizzazione e Backup Manuale</div>
-            <div class="backup-zone">
-                <button class="btn-backup" onclick="esportaBackup()">📥 Esporta File (.json)</button>
-                <label class="btn-backup">
-                    📤 Importa File (.json)
-                    <input type="file" id="importFile" accept=".json" onchange="importaBackup(this)" style="display:none;">
-                </label>
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2>Simulazioni future</h2>
+              <p class="section-text">Spese eventuali o future da valutare.</p>
             </div>
-            <div class="backup-zone">
-                <button class="btn-backup btn-text-backup" onclick="copiaTestoBackup()">📋 Copia Dati (Testo)</button>
-                <button class="btn-backup btn-text-backup" onclick="incollaTestoBackup()">📥 Incolla Dati (Testo)</button>
+            <button id="addFutureExpense" class="btn btn-primary">+ Aggiungi simulazione</button>
+          </div>
+
+          <form id="futureForm" class="entry-form hidden">
+            <div class="grid-2">
+              <div class="field">
+                <label for="futureDescription">Descrizione</label>
+                <input id="futureDescription" type="text" placeholder="Es. Vacanza estiva" required />
+              </div>
+              <div class="field">
+                <label for="futureAmount">Importo (€)</label>
+                <input id="futureAmount" type="number" step="0.01" min="0" placeholder="Es. 1500" required />
+              </div>
+              <div class="field">
+                <label for="futureCategory">Categoria</label>
+                <input id="futureCategory" type="text" placeholder="Es. Viaggi" />
+              </div>
+              <div class="field">
+                <label for="futureDate">Data prevista</label>
+                <input id="futureDate" type="date" />
+              </div>
+              <div class="field">
+                <label for="futurePriority">Priorità</label>
+                <select id="futurePriority">
+                  <option value="Alta">Alta</option>
+                  <option value="Media" selected>Media</option>
+                  <option value="Bassa">Bassa</option>
+                </select>
+              </div>
+              <div class="field checkbox-field">
+                <label for="futureEnabled">Includi nel calcolo</label>
+                <input id="futureEnabled" type="checkbox" checked />
+              </div>
             </div>
-        </div>
-
-        <!-- DASHBOARD RISULTATI -->
-        <div>
-            <div class="card">
-                <h3>Trend Grafico (Totale)</h3>
-                <canvas id="mioGrafico"></canvas>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Salva simulazione</button>
+              <button type="button" id="cancelFutureBtn" class="btn btn-secondary">Annulla</button>
             </div>
-            
-            <div class="card">
-                <h3>Riepilogo Annuale</h3>
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <span class="stat-label">Proiezione Fine Anno</span>
-                        <span id="stimaAttuale" class="stat-value" style="color:var(--primary)">0€</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-label">Crescita Totale</span>
-                        <span id="crescita" class="stat-value">0%</span>
-                    </div>
-                </div>
-                <div id="analisiTarget" style="margin-top:20px; padding:15px; background:#fff8eb; border-radius:8px; font-size:0.9rem; border-left:4px solid #f59e0b;"></div>
-            </div>
-        </div>
-    </div>
-    <button class="btn-reset" onclick="resetDati()">Azzera database di questo browser</button>
-</div>
+          </form>
 
-<script>
-    const mesiNomi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
-    let chart;
+          <div id="futureList" class="list"></div>
+        </section>
+      </div>
 
-    // IL TUO DATABASE HARDCODED DI SICUREZZA
-    const datiInizialiHardcoded = {
-        // DATI REALI 2025
-        "db_2025_v_0": "36213", "db_2025_tot_0": "36213",
-        "db_2025_v_1": "20194", "db_2025_tot_1": "20194",
-        "db_2025_v_2": "39334", "db_2025_tot_2": "39334",
-        "db_2025_v_3": "56630", "db_2025_tot_3": "56630",
-        "db_2025_v_4": "78993", "db_2025_tot_4": "78993",
-        "db_2025_v_5": "58218", "db_2025_tot_5": "58218",
-        "db_2025_v_6": "80569", "db_2025_tot_6": "80569",
-        "db_2025_v_7": "46520.2", "db_2025_tot_7": "46520.2",
-        "db_2025_v_8": "30600.3", "db_2025_tot_8": "30600.3",
-        "db_2025_v_9": "42520.2", "db_2025_tot_9": "42520.2",
-        "db_2025_v_10": "34396", "db_2025_tot_10": "34396",
-        "db_2025_v_11": "11042", "db_2025_tot_11": "11042",
-        // DATI REALI 2026
-        "db_2026_v_0": "98087", "db_2026_tot_0": "98087",
-        "db_2026_v_1": "80434.8", "db_2026_tot_1": "80434.8",
-        "db_2026_v_2": "51475.16", "db_2026_tot_2": "51475.16",
-        "db_2026_v_3": "67098", "db_2026_tot_3": "67098",
-        "db_2026_v_4": "46173", "db_2026_tot_4": "46173"
-    };
+      <section class="card tips-card">
+        <h2>Come usarla</h2>
+        <ul>
+          <li>Inserisci il <strong>saldo attuale</strong> e una <strong>soglia minima</strong> che vuoi mantenere.</li>
+          <li>Aggiungi le <strong>spese certe</strong> per vedere il costo già impegnato.</li>
+          <li>Aggiungi una o più <strong>simulazioni future</strong> e attivale/disattivale per confrontare scenari diversi.</li>
+          <li>Usa <strong>Esporta dati</strong> per salvare un backup in JSON e <strong>Importa dati</strong> per ricaricarlo.</li>
+        </ul>
+      </section>
+    </main>
+  </div>
 
-    // Inizializza il localStorage se vuoto per evitare l'effetto tabula rasa
-    Object.keys(datiInizialiHardcoded).forEach(chiave => {
-        if (!localStorage.getItem(chiave)) {
-            localStorage.setItem(chiave, datiInizialiHardcoded[chiave]);
-        }
-    });
-    
-    const selettoreAnno = document.getElementById('selettoreAnno');
-    const annoAttualeReale = new Date().getFullYear();
-    for(let a = 2025; a <= 2035; a++) {
-        const opt = document.createElement('option');
-        opt.value = a; opt.innerText = a;
-        if(a === annoAttualeReale) opt.selected = true;
-        selettoreAnno.appendChild(opt);
-    }
+  <template id="expenseItemTemplate">
+    <article class="list-item">
+      <div class="list-main">
+        <h3 class="item-title"></h3>
+        <div class="meta-row"></div>
+      </div>
+      <div class="list-side">
+        <strong class="item-amount"></strong>
+        <div class="item-actions"></div>
+      </div>
+    </article>
+  </template>
 
-    const tbody = document.getElementById('tabellaMesi');
-    const tbodyImpatto = document.getElementById('tabellaImpatto');
-    const selectMese = document.getElementById('meseSelezione');
-    const meseCorrenteReale = new Date().getMonth();
-
-    mesiNomi.forEach((mese, i) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td style="font-weight:bold; font-size:0.8rem">${mese}</td>
-            <td><input type="number" class="in-v" id="input-v-${i}" oninput="aggiornaTutto()" placeholder="0"></td>
-            <td><input type="number" class="in-a" id="input-a-${i}" oninput="aggiornaTutto()" placeholder="0"></td>
-            <td id="tot-mese-${i}" class="col-totale">0 €</td>
-            <td><input type="number" class="in-p" id="input-p-${i}" disabled placeholder="0"></td>
-            <td id="diff-${i}" style="text-align:right; font-size:0.85rem;">-</td>
-        `;
-        tbody.appendChild(row);
-
-        const rowImp = document.createElement('tr');
-        rowImp.innerHTML = `
-            <td style="font-weight:bold; font-size:0.8rem">${mese}</td>
-            <td id="imp-perc-${i}">-</td>
-            <td id="imp-val-${i}" style="text-align:right;" class="info-assistenza">-</td>
-        `;
-        tbodyImpatto.appendChild(rowImp);
-
-        const opt = document.createElement('option');
-        opt.value = i; opt.innerText = mese;
-        if(i === meseCorrenteReale) opt.selected = true;
-        selectMese.appendChild(opt);
-    });
-
-    function cambiaAnno() {
-        const annoScelto = parseInt(selettoreAnno.value);
-        const annoPrec = annoScelto - 1;
-
-        for(let i=0; i<12; i++) {
-            document.getElementById(`input-v-${i}`).value = localStorage.getItem(`db_${annoScelto}_v_${i}`) || '';
-            document.getElementById(`input-a-${i}`).value = localStorage.getItem(`db_${annoScelto}_a_${i}`) || '';
-            document.getElementById(`input-p-${i}`).value = localStorage.getItem(`db_${annoPrec}_tot_${i}`) || '';
-        }
-        aggiornaTutto();
-    }
-
-    function aggiungiVendita() {
-        const importoInput = document.getElementById('importoVendita');
-        const valore = parseFloat(importoInput.value);
-        const tipo = document.getElementById('tipoEntrata').value;
-        const meseSelezionato = document.getElementById('meseSelezione').value;
-        const msgCassa = document.getElementById('msg-cassa');
-
-        if (isNaN(valore) || valore <= 0) {
-            alert("Inserisci un importo valido."); return;
-        }
-
-        const idInput = (tipo === 'vendite') ? `input-v-${meseSelezionato}` : `input-a-${meseSelezionato}`;
-        const inputMese = document.getElementById(idInput);
-        const vecchioValore = parseFloat(inputMese.value) || 0;
-        inputMese.value = (vecchioValore + valore).toFixed(2);
-
-        msgCassa.innerText = `€ ${valore.toLocaleString('it-IT')} aggiunti a ${tipo.toUpperCase()} di ${mesiNomi[meseSelezionato]}!`;
-        importoInput.value = "";
-        setTimeout(() => { msgCassa.innerText = ""; }, 3000);
-        salvaTutto();
-    }
-
-    function aggiornaTutto() {
-        const datiV = Array.from(document.querySelectorAll('.in-v')).map(i => parseFloat(i.value) || 0);
-        const datiA = Array.from(document.querySelectorAll('.in-a')).map(i => parseFloat(i.value) || 0);
-        const datiP = Array.from(document.querySelectorAll('.in-p')).map(i => parseFloat(i.value) || 0);
-        
-        let totaleAnnoCorrente = 0; 
-        let mesiCompilati = 0; 
-        let totaleAnnoPrecedente = 0;
-        let arrayTotaliMensili = [];
-
-        for(let i=0; i<12; i++) {
-            const v = datiV[i];
-            const a = datiA[i];
-            const p = datiP[i];
-            const diffCell = document.getElementById(`diff-${i}`);
-            
-            const totaleMeseCorrente = v + a;
-            arrayTotaliMensili.push(totaleMeseCorrente);
-            
-            document.getElementById(`tot-mese-${i}`).innerText = totaleMeseCorrente > 0 ? totaleMeseCorrente.toLocaleString('it-IT', {minimumFractionDigits: 2}) + " €" : "0 €";
-
-            const cellPerc = document.getElementById(`imp-perc-${i}`);
-            const cellVal = document.getElementById(`imp-val-${i}`);
-            if (a > 0) {
-                const incidenza = ((a / totaleMeseCorrente) * 100).toFixed(1);
-                cellPerc.innerHTML = `L'assistenza genera il <b>${incidenza}%</b> del mese`;
-                cellVal.innerText = `+ ${a.toLocaleString('it-IT', {style: 'currency', currency: 'EUR'})}`;
-            } else {
-                cellPerc.innerText = "Nessuna assistenza registrata";
-                cellVal.innerText = "-";
-            }
-
-            if (totaleMeseCorrente > 0 && p > 0) {
-                const varPerc = ((totaleMeseCorrente - p) / p * 100).toFixed(1);
-                if (varPerc > 0) diffCell.innerHTML = `<span class="diff-pos">↑ ${varPerc}%</span>`;
-                else if (varPerc < 0) diffCell.innerHTML = `<span class="diff-neg">↓ ${Math.abs(varPerc)}%</span>`;
-                else diffCell.innerHTML = `<span class="diff-null">0%</span>`;
-            } else { diffCell.innerText = "-"; }
-
-            if(v > 0 || a > 0) { 
-                totaleAnnoCorrente += totaleMeseCorrente; 
-                mesiCompilati++; 
-            }
-            totaleAnnoPrecedente += p;
-        }
-
-        document.getElementById('totaleHeader').innerText = totaleAnnoCorrente.toLocaleString('it-IT', {style: 'currency', currency: 'EUR'});
-
-        const proiezioneC = mesiCompilati > 0 ? (totaleAnnoCorrente / mesiCompilati) * 12 : 0;
-        const crescitaGen = totaleAnnoPrecedente > 0 ? ((proiezioneC - totaleAnnoPrecedente) / totaleAnnoPrecedente * 100).toFixed(1) : 0;
-
-        document.getElementById('stimaAttuale').innerText = proiezioneC.toLocaleString('it-IT', {maximumFractionDigits:0}) + " €";
-        document.getElementById('crescita').innerText = totaleAnnoPrecedente > 0 ? (crescitaGen > 0 ? "+" : "") + crescitaGen + "%" : "-";
-        document.getElementById('crescita').style.color = crescitaGen >= 0 ? "var(--success)" : "var(--danger)";
-
-        const analisi = document.getElementById('analisiTarget');
-        if (proiezioneC < 1000000) {
-            const residuo = (1000000 - totaleAnnoCorrente) / (12 - mesiCompilati);
-            analisi.innerHTML = `Mancano <b>${(1000000 - proiezioneC).toLocaleString('it-IT')}€</b> al milione.<br>Target mesi rimasti: <b>${mesiCompilati < 12 ? residuo.toLocaleString('it-IT', {maximumFractionDigits:0}) : 0}€/mese</b>.`;
-        } else {
-            analisi.innerHTML = "✨ <b>Target Milione Raggiunto!</b> Mantieni questa media complessiva.";
-        }
-        disegnaGrafico(arrayTotaliMensili, datiP);
-    }
-
-    function disegnaGrafico(corrente, passato) {
-        const ctx = document.getElementById('mioGrafico').getContext('2d');
-        const annoS = selettoreAnno.value;
-        if (chart) chart.destroy();
-        chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: mesiNomi.map(m => m.substr(0,3)),
-                datasets: [
-                    { label: 'Totale ' + annoS, data: corrente.map(v => v || null), borderColor: '#2563eb', tension: 0.3, fill: false, borderWidth: 3 },
-                    { label: 'Totale Prec.', data: passato.map(v => v || null), borderColor: '#cbd5e1', tension: 0.3, fill: false, borderDash: [5,5] }
-                ]
-            },
-            options: { plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true } } }
-        });
-    }
-
-    function salvaTutto() {
-        const annoScelto = selettoreAnno.value;
-        document.querySelectorAll('.in-v').forEach((el, i) => {
-            localStorage.setItem(`db_${annoScelto}_v_${i}`, el.value);
-        });
-        document.querySelectorAll('.in-a').forEach((el, i) => {
-            localStorage.setItem(`db_${annoScelto}_a_${i}`, el.value);
-        });
-        
-        for(let i=0; i<12; i++) {
-            const v = parseFloat(document.getElementById(`input-v-${i}`).value) || 0;
-            const a = parseFloat(document.getElementById(`input-a-${i}`).value) || 0;
-            localStorage.setItem(`db_${annoScelto}_tot_${i}`, (v + a).toFixed(2));
-        }
-
-        const msg = document.getElementById('msg');
-        msg.innerText = "✓ Dati salvati con successo nel browser!";
-        setTimeout(() => { msg.innerText = ""; }, 3000);
-        cambiaAnno();
-    }
-
-    function ottieniOggettoDati() {
-        let tuttoIlDB = {};
-        for (let i = 0; i < localStorage.length; i++) {
-            let chiave = localStorage.key(i);
-            if(chiave.startsWith("db_")) tuttoIlDB[chiave] = localStorage.getItem(chiave);
-        }
-        return tuttoIlDB;
-    }
-
-    function esportaBackup() {
-        const dati = ottieniOggettoDati();
-        const blob = new Blob([JSON.stringify(dati)], { type: "application/json" });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `backup_aggiornato_fatturato.json`;
-        a.click();
-    }
-
-    function importaBackup(input) {
-        const file = input.files[0]; if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const dati = JSON.parse(e.target.result);
-                Object.keys(dati).forEach(chiave => {
-                    if(chiave.startsWith("db_")) localStorage.setItem(chiave, dati[chiave]);
-                });
-                alert("✓ Backup importato con successo!");
-                cambiaAnno();
-            } catch (err) { alert("File non valido."); }
-        };
-        reader.readAsText(file);
-    }
-
-    function copiaTestoBackup() {
-        const stringaTesto = btoa(JSON.stringify(ottieniOggettoDati()));
-        navigator.clipboard.writeText(stringaTesto).then(() => {
-            alert("✓ Codice copiato negli appunti!");
-        }).catch(() => alert("Codice:\n\n" + stringaTesto));
-    }
-
-    function incollaTestoBackup() {
-        const codiceInput = prompt("Incolla qui il codice di backup:");
-        if (!codiceInput) return;
-        try {
-            const dati = JSON.parse(atob(codiceInput.trim()));
-            Object.keys(dati).forEach(chiave => {
-                if(chiave.startsWith("db_")) localStorage.setItem(chiave, dati[chiave]);
-            });
-            alert("✓ Sincronizzazione completata!");
-            cambiaAnno();
-        } catch (err) { alert("Errore nella lettura del codice."); }
-    }
-
-    function resetDati() {
-        if(confirm("Vuoi azzerare la memoria? I dati fissi hardcoded rimarranno comunque al riavvio.")) { localStorage.clear(); location.reload(); }
-    }
-
-    window.onload = cambiaAnno;
-</script>
+  <script src="script.js"></script>
 </body>
 </html>
