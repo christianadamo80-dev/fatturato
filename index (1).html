@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulatore Spese</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Web app statica per GitHub Pages</p>
+        <h1>Simulatore Spese</h1>
+        <p class="subtitle">
+          Inserisci il saldo attuale, le spese certe e i movimenti futuri (spese o entrate)
+          per vedere il saldo residuo in tempo reale.
+        </p>
+      </div>
+      <div class="topbar-actions">
+        <button id="exportBtn" class="btn btn-secondary">Esporta dati</button>
+        <label class="btn btn-secondary file-label">
+          Importa dati
+          <input id="importFile" type="file" accept="application/json" hidden />
+        </label>
+        <button id="resetBtn" class="btn btn-danger">Reset</button>
+      </div>
+    </header>
+
+    <main class="dashboard">
+      <section class="card card-highlight">
+        <div class="card-header">
+          <h2>Dati iniziali</h2>
+          <span class="chip">Salvataggio automatico</span>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="currentBalance">Saldo attuale (€)</label>
+            <input id="currentBalance" type="number" step="0.01" />
+          </div>
+          <div class="field">
+            <label for="safetyThreshold">Soglia minima di sicurezza (€)</label>
+            <input id="safetyThreshold" type="number" step="0.01" />
+          </div>
+        </div>
+      </section>
+
+      <section class="stats-grid">
+        <article class="stat-card">
+          <span class="stat-label">Totale spese certe</span>
+          <strong id="certainTotal" class="stat-value">€ 0,00</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Impatto movimenti futuri</span>
+          <strong id="futureTotal" class="stat-value">€ 0,00</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Saldo finale simulato</span>
+          <strong id="finalBalance" class="stat-value">€ 0,00</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Margine sopra soglia</span>
+          <strong id="marginValue" class="stat-value">€ 0,00</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Saldo stimato fine mese</span>
+          <strong id="endMonthBalance" class="stat-value">€ 0,00</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Saldo stimato al 31/12</span>
+          <strong id="endYearBalance" class="stat-value">€ 0,00</strong>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
