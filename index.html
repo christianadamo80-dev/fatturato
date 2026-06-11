@@ -12,7 +12,7 @@
       <div>
         <p class="eyebrow">Web app statica per GitHub Pages</p>
         <h1>Simulatore Spese</h1>
-        <p class="subtitle">Inserisci il saldo attuale, le spese certe e le simulazioni future per vedere il saldo residuo in tempo reale.</p>
+        <p class="subtitle">Inserisci il saldo attuale, le spese certe e i movimenti futuri (spese o entrate) per vedere il saldo residuo in tempo reale.</p>
       </div>
       <div class="topbar-actions">
         <button id="exportBtn" class="btn btn-secondary">Esporta dati</button>
@@ -33,7 +33,7 @@
         <div class="grid-2">
           <div class="field">
             <label for="currentBalance">Saldo attuale (€)</label>
-            <input id="currentBalance" type="number" step="0.01" min="0" placeholder="Es. 12500" />
+            <input id="currentBalance" type="number" step="0.01" placeholder="Es. 12500" />
           </div>
           <div class="field">
             <label for="safetyThreshold">Soglia minima di sicurezza (€)</label>
@@ -48,7 +48,7 @@
           <strong id="certainTotal" class="stat-value">€ 0,00</strong>
         </article>
         <article class="stat-card">
-          <span class="stat-label">Totale simulazioni future</span>
+          <span class="stat-label">Impatto movimenti futuri</span>
           <strong id="futureTotal" class="stat-value">€ 0,00</strong>
         </article>
         <article class="stat-card">
@@ -80,7 +80,7 @@
         </div>
         <div class="bar-row">
           <div>
-            <span>Spese totali</span>
+            <span>Impatto totale sul saldo</span>
             <strong id="barExpensesLabel">€ 0,00</strong>
           </div>
           <div class="progress-track">
@@ -144,25 +144,32 @@
         <section class="card">
           <div class="card-header">
             <div>
-              <h2>Simulazioni future</h2>
-              <p class="section-text">Spese eventuali o future da valutare.</p>
+              <h2>Movimenti futuri</h2>
+              <p class="section-text">Puoi inserire sia spese future sia entrate future.</p>
             </div>
-            <button id="addFutureExpense" class="btn btn-primary">+ Aggiungi simulazione</button>
+            <button id="addFutureExpense" class="btn btn-primary">+ Aggiungi movimento</button>
           </div>
 
           <form id="futureForm" class="entry-form hidden">
             <div class="grid-2">
               <div class="field">
                 <label for="futureDescription">Descrizione</label>
-                <input id="futureDescription" type="text" placeholder="Es. Vacanza estiva" required />
+                <input id="futureDescription" type="text" placeholder="Es. Vacanza estiva / Bonus" required />
               </div>
               <div class="field">
                 <label for="futureAmount">Importo (€)</label>
                 <input id="futureAmount" type="number" step="0.01" min="0" placeholder="Es. 1500" required />
               </div>
               <div class="field">
+                <label for="futureType">Tipo movimento</label>
+                <select id="futureType">
+                  <option value="expense" selected>Spesa futura</option>
+                  <option value="income">Entrata futura</option>
+                </select>
+              </div>
+              <div class="field">
                 <label for="futureCategory">Categoria</label>
-                <input id="futureCategory" type="text" placeholder="Es. Viaggi" />
+                <input id="futureCategory" type="text" placeholder="Es. Viaggi / Stipendio / Rimborso" />
               </div>
               <div class="field">
                 <label for="futureDate">Data prevista</label>
@@ -182,7 +189,7 @@
               </div>
             </div>
             <div class="form-actions">
-              <button type="submit" class="btn btn-primary">Salva simulazione</button>
+              <button type="submit" class="btn btn-primary">Salva movimento</button>
               <button type="button" id="cancelFutureBtn" class="btn btn-secondary">Annulla</button>
             </div>
           </form>
@@ -196,7 +203,7 @@
         <ul>
           <li>Inserisci il <strong>saldo attuale</strong> e una <strong>soglia minima</strong> che vuoi mantenere.</li>
           <li>Aggiungi le <strong>spese certe</strong> per vedere il costo già impegnato.</li>
-          <li>Aggiungi una o più <strong>simulazioni future</strong> e attivale/disattivale per confrontare scenari diversi.</li>
+          <li>Aggiungi uno o più <strong>movimenti futuri</strong>, sia come <strong>spese</strong> sia come <strong>entrate</strong>, e attivali/disattivali per confrontare scenari diversi.</li>
           <li>Usa <strong>Esporta dati</strong> per salvare un backup in JSON e <strong>Importa dati</strong> per ricaricarlo.</li>
         </ul>
       </section>

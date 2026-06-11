@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'simulatore-spese-v1';
+const STORAGE_KEY = 'simulatore-spese-v2';
 
 const state = {
   currentBalance: 0,
@@ -36,14 +36,13 @@ const els = {
   importFile: document.getElementById('importFile'),
   resetBtn: document.getElementById('resetBtn'),
   expenseItemTemplate: document.getElementById('expenseItemTemplate'),
-
   certainDescription: document.getElementById('certainDescription'),
   certainAmount: document.getElementById('certainAmount'),
   certainFrequency: document.getElementById('certainFrequency'),
   certainDate: document.getElementById('certainDate'),
-
   futureDescription: document.getElementById('futureDescription'),
   futureAmount: document.getElementById('futureAmount'),
+  futureType: document.getElementById('futureType'),
   futureCategory: document.getElementById('futureCategory'),
   futureDate: document.getElementById('futureDate'),
   futurePriority: document.getElementById('futurePriority'),
@@ -54,18 +53,32 @@ function formatCurrency(value) {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(value || 0));
 }
 
+function formatSignedCurrency(value) {
+  const num = Number(value || 0);
+  const sign = num > 0 ? '+' : num < 0 ? '-' : '';
+  return `${sign}${formatCurrency(Math.abs(num))}`;
+}
+
 function uid() {
   return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function normalizeFutureItems(items = []) {
+  return items.map(item => ({
+    ...item,
+    type: item.type || 'expense',
+    enabled: typeof item.enabled === 'boolean' ? item.enabled : true,
+    priority: item.priority || 'Media',
+  }));
+}
+
 function saveState() {
-  const persistable = {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
     currentBalance: Number(state.currentBalance || 0),
     safetyThreshold: Number(state.safetyThreshold || 0),
     certainExpenses: state.certainExpenses,
     futureExpenses: state.futureExpenses,
-  };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(persistable));
+  }));
 }
 
 function loadState() {
@@ -76,9 +89,9 @@ function loadState() {
     state.currentBalance = Number(data.currentBalance || 0);
     state.safetyThreshold = Number(data.safetyThreshold || 0);
     state.certainExpenses = Array.isArray(data.certainExpenses) ? data.certainExpenses : [];
-    state.futureExpenses = Array.isArray(data.futureExpenses) ? data.futureExpenses : [];
+    state.futureExpenses = normalizeFutureItems(Array.isArray(data.futureExpenses) ? data.futureExpenses : []);
   } catch {
-    console.warn('Impossibile leggere i dati salvati.');
+    console.warn('Dati salvati non leggibili');
   }
 }
 
@@ -87,46 +100,48 @@ function setInputsFromState() {
   els.safetyThreshold.value = state.safetyThreshold || '';
 }
 
+function getFutureImpact(item) {
+  const amount = Number(item.amount || 0);
+  return item.type === 'income' ? -amount : amount;
+}
+
 function totals() {
   const certainTotal = state.certainExpenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const futureTotal = state.futureExpenses
     .filter(item => item.enabled)
-    .reduce((sum, item) => sum + Number(item.amount || 0), 0);
-  const totalExpenses = certainTotal + futureTotal;
-  const finalBalance = Number(state.currentBalance || 0) - totalExpenses;
+    .reduce((sum, item) => sum + getFutureImpact(item), 0);
+  const totalImpact = certainTotal + futureTotal;
+  const finalBalance = Number(state.currentBalance || 0) - totalImpact;
   const margin = finalBalance - Number(state.safetyThreshold || 0);
-  return { certainTotal, futureTotal, totalExpenses, finalBalance, margin };
+  return { certainTotal, futureTotal, totalImpact, finalBalance, margin };
 }
 
 function updateSummary() {
-  const { certainTotal, futureTotal, totalExpenses, finalBalance, margin } = totals();
+  const { certainTotal, futureTotal, totalImpact, finalBalance, margin } = totals();
   els.certainTotal.textContent = formatCurrency(certainTotal);
-  els.futureTotal.textContent = formatCurrency(futureTotal);
+  els.futureTotal.textContent = formatSignedCurrency(-futureTotal);
   els.finalBalance.textContent = formatCurrency(finalBalance);
-  els.marginValue.textContent = formatCurrency(margin);
+  els.marginValue.textContent = formatSignedCurrency(margin);
   els.barInitialLabel.textContent = formatCurrency(state.currentBalance || 0);
-  els.barExpensesLabel.textContent = formatCurrency(totalExpenses);
+  els.barExpensesLabel.textContent = formatSignedCurrency(-totalImpact);
   els.barFinalLabel.textContent = formatCurrency(finalBalance);
 
-  const base = Math.max(Number(state.currentBalance || 0), totalExpenses, Math.abs(finalBalance), 1);
-  const initialWidth = Math.min(100, (Number(state.currentBalance || 0) / base) * 100);
-  const expensesWidth = Math.min(100, (totalExpenses / base) * 100);
-  const finalWidth = Math.min(100, (Math.abs(finalBalance) / base) * 100);
-
-  els.initialBar.style.width = `${initialWidth}%`;
-  els.expensesBar.style.width = `${expensesWidth}%`;
-  els.finalBar.style.width = `${finalWidth}%`;
+  const base = Math.max(Number(state.currentBalance || 0), Math.abs(totalImpact), Math.abs(finalBalance), 1);
+  els.initialBar.style.width = `${Math.min(100, (Number(state.currentBalance || 0) / base) * 100)}%`;
+  els.expensesBar.style.width = `${Math.min(100, (Math.abs(totalImpact) / base) * 100)}%`;
+  els.finalBar.style.width = `${Math.min(100, (Math.abs(finalBalance) / base) * 100)}%`;
+  els.expensesBar.className = `progress-bar ${totalImpact >= 0 ? 'progress-orange' : 'progress-green'}`;
   els.finalBar.className = `progress-bar ${finalBalance >= 0 ? 'progress-green' : 'progress-red'}`;
 
   let badgeClass = 'neutral';
   let badgeText = 'In attesa dati';
   let statusText = 'Inserisci i dati per vedere la situazione.';
 
-  if (Number(state.currentBalance || 0) > 0 || totalExpenses > 0) {
+  if (Number(state.currentBalance || 0) || certainTotal || futureTotal) {
     if (finalBalance < 0) {
       badgeClass = 'danger';
       badgeText = 'Saldo negativo';
-      statusText = 'Con gli importi inseriti andrai sotto zero. Valuta di ridurre o posticipare alcune spese.';
+      statusText = 'Con i movimenti inseriti andrai sotto zero. Valuta di ridurre o posticipare alcune spese.';
     } else if (margin < 0) {
       badgeClass = 'warning';
       badgeText = 'Sotto soglia';
@@ -134,7 +149,7 @@ function updateSummary() {
     } else {
       badgeClass = 'ok';
       badgeText = 'Situazione OK';
-      statusText = 'Il saldo finale rimane sopra la soglia minima. Puoi usare le simulazioni per confrontare più scenari.';
+      statusText = 'Il saldo finale rimane sopra la soglia minima. Puoi usare entrate e spese future per confrontare scenari diversi.';
     }
   }
 
@@ -159,14 +174,20 @@ function createActionButton(text, className, onClick) {
   return button;
 }
 
+function formatDate(value) {
+  if (!value) return '';
+  const [year, month, day] = value.split('-');
+  return year && month && day ? `${day}/${month}/${year}` : value;
+}
+
 function renderCertainExpenses() {
   els.certainList.innerHTML = '';
-  if (state.certainExpenses.length === 0) {
+  if (!state.certainExpenses.length) {
     els.certainList.innerHTML = '<div class="empty-state">Nessuna spesa certa inserita.</div>';
     return;
   }
 
-  state.certainExpenses
+  [...state.certainExpenses]
     .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
     .forEach(item => {
       const clone = els.expenseItemTemplate.content.firstElementChild.cloneNode(true);
@@ -174,7 +195,7 @@ function renderCertainExpenses() {
       const metaRow = clone.querySelector('.meta-row');
       metaRow.appendChild(createMetaPill(item.frequency || 'Una tantum'));
       if (item.date) metaRow.appendChild(createMetaPill(`Data: ${formatDate(item.date)}`));
-      clone.querySelector('.item-amount').textContent = formatCurrency(item.amount);
+      clone.querySelector('.item-amount').textContent = `- ${formatCurrency(item.amount)}`;
       const actions = clone.querySelector('.item-actions');
       actions.appendChild(createActionButton('Modifica', 'btn-secondary', () => editCertain(item.id)));
       actions.appendChild(createActionButton('Elimina', 'btn-danger', () => deleteCertain(item.id)));
@@ -184,35 +205,29 @@ function renderCertainExpenses() {
 
 function renderFutureExpenses() {
   els.futureList.innerHTML = '';
-  if (state.futureExpenses.length === 0) {
-    els.futureList.innerHTML = '<div class="empty-state">Nessuna simulazione futura inserita.</div>';
+  if (!state.futureExpenses.length) {
+    els.futureList.innerHTML = '<div class="empty-state">Nessun movimento futuro inserito.</div>';
     return;
   }
 
-  state.futureExpenses
+  [...state.futureExpenses]
     .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
     .forEach(item => {
       const clone = els.expenseItemTemplate.content.firstElementChild.cloneNode(true);
       clone.querySelector('.item-title').textContent = item.description;
       const metaRow = clone.querySelector('.meta-row');
+      metaRow.appendChild(createMetaPill(item.type === 'income' ? 'Entrata futura' : 'Spesa futura', item.type === 'income' ? 'priority-bassa' : ''));
       if (item.category) metaRow.appendChild(createMetaPill(item.category));
       if (item.date) metaRow.appendChild(createMetaPill(`Data: ${formatDate(item.date)}`));
       metaRow.appendChild(createMetaPill(`Priorità ${item.priority}`, `priority-${(item.priority || '').toLowerCase()}`));
       metaRow.appendChild(createMetaPill(item.enabled ? 'Inclusa nel calcolo' : 'Esclusa dal calcolo', item.enabled ? '' : 'disabled'));
-      clone.querySelector('.item-amount').textContent = formatCurrency(item.amount);
+      clone.querySelector('.item-amount').textContent = `${item.type === 'income' ? '+' : '-'} ${formatCurrency(item.amount)}`;
       const actions = clone.querySelector('.item-actions');
       actions.appendChild(createActionButton(item.enabled ? 'Escludi' : 'Includi', 'btn-secondary', () => toggleFuture(item.id)));
       actions.appendChild(createActionButton('Modifica', 'btn-secondary', () => editFuture(item.id)));
       actions.appendChild(createActionButton('Elimina', 'btn-danger', () => deleteFuture(item.id)));
       els.futureList.appendChild(clone);
     });
-}
-
-function formatDate(value) {
-  if (!value) return '';
-  const [year, month, day] = value.split('-');
-  if (!year || !month || !day) return value;
-  return `${day}/${month}/${year}`;
 }
 
 function renderAll() {
@@ -241,6 +256,7 @@ function openFutureForm(editing = false) {
   if (!editing) {
     state.editingFutureId = null;
     els.futureForm.reset();
+    els.futureType.value = 'expense';
     els.futurePriority.value = 'Media';
     els.futureEnabled.checked = true;
   }
@@ -251,6 +267,7 @@ function openFutureForm(editing = false) {
 function closeFutureForm() {
   state.editingFutureId = null;
   els.futureForm.reset();
+  els.futureType.value = 'expense';
   els.futurePriority.value = 'Media';
   els.futureEnabled.checked = true;
   els.futureForm.classList.add('hidden');
@@ -273,6 +290,7 @@ function editFuture(id) {
   state.editingFutureId = id;
   els.futureDescription.value = item.description || '';
   els.futureAmount.value = item.amount || '';
+  els.futureType.value = item.type || 'expense';
   els.futureCategory.value = item.category || '';
   els.futureDate.value = item.date || '';
   els.futurePriority.value = item.priority || 'Media';
@@ -323,6 +341,7 @@ function handleFutureSubmit(event) {
     id: state.editingFutureId || uid(),
     description: els.futureDescription.value.trim(),
     amount: Number(els.futureAmount.value || 0),
+    type: els.futureType.value,
     category: els.futureCategory.value.trim(),
     date: els.futureDate.value,
     priority: els.futurePriority.value,
@@ -370,7 +389,7 @@ function importData(event) {
       state.currentBalance = Number(data.currentBalance || 0);
       state.safetyThreshold = Number(data.safetyThreshold || 0);
       state.certainExpenses = Array.isArray(data.certainExpenses) ? data.certainExpenses : [];
-      state.futureExpenses = Array.isArray(data.futureExpenses) ? data.futureExpenses : [];
+      state.futureExpenses = normalizeFutureItems(Array.isArray(data.futureExpenses) ? data.futureExpenses : []);
       setInputsFromState();
       renderAll();
       alert('Dati importati correttamente.');
